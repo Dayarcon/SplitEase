@@ -112,6 +112,13 @@ export default function GroupDetail() {
   const [addMemberError, setAddMemberError] = useState("");
   const [addMemberSuccess, setAddMemberSuccess] = useState("");
 
+  // Invite link state
+  const [showInvitePanel, setShowInvitePanel] = useState(false);
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [generatingInvite, setGeneratingInvite] = useState(false);
+  const [copiedInvite, setCopiedInvite] = useState(false);
+  const [revokingInvite, setRevokingInvite] = useState(false);
+
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [editingGroupName, setEditingGroupName] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
@@ -158,6 +165,40 @@ export default function GroupDetail() {
 
   const handleExport = () => {
     window.open(`/api/groups/${groupId}/export`, '_blank');
+  };
+
+  const handleGenerateInvite = async () => {
+    setGeneratingInvite(true);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/invite`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok) setInviteToken(data.token);
+    } catch {
+      console.error("Failed to generate invite");
+    } finally {
+      setGeneratingInvite(false);
+    }
+  };
+
+  const handleCopyInvite = () => {
+    if (!inviteToken) return;
+    const url = `${window.location.origin}/invite/${inviteToken}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedInvite(true);
+      setTimeout(() => setCopiedInvite(false), 2500);
+    });
+  };
+
+  const handleRevokeInvite = async () => {
+    setRevokingInvite(true);
+    try {
+      await fetch(`/api/groups/${groupId}/invite`, { method: "DELETE" });
+      setInviteToken(null);
+    } catch {
+      console.error("Failed to revoke invite");
+    } finally {
+      setRevokingInvite(false);
+    }
   };
 
   useEffect(() => {
@@ -704,15 +745,86 @@ export default function GroupDetail() {
             <h2 className="section-header" style={{ margin: 0 }}>
               <Wallet style={{ width: 20, height: 20, color: '#4f46e5' }} /> Members & Balances
             </h2>
-            <button
-              onClick={() => { setShowAddMember(!showAddMember); setAddMemberError(""); }}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }}
-              title="Add member"
-            >
-              <UserPlus style={{ width: 16, height: 16 }} />
-              Add
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                onClick={() => {
+                  setShowInvitePanel(!showInvitePanel);
+                  setShowAddMember(false);
+                  if (!showInvitePanel && !inviteToken) handleGenerateInvite();
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: showInvitePanel ? '#4338ca' : '#64748b', background: showInvitePanel ? '#eef2ff' : '#f1f5f9', border: 'none', borderRadius: 8, padding: '5px 10px', cursor: 'pointer' }}
+                title="Share invite link"
+              >
+                <Copy style={{ width: 14, height: 14 }} />
+                Share
+              </button>
+              <button
+                onClick={() => { setShowAddMember(!showAddMember); setAddMemberError(""); setShowInvitePanel(false); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer' }}
+                title="Add member"
+              >
+                <UserPlus style={{ width: 16, height: 16 }} />
+                Add
+              </button>
+            </div>
           </div>
+
+          {/* Invite Link Panel */}
+          {showInvitePanel && (
+            <div style={{ marginBottom: 16, borderRadius: 16, background: '#f5f3ff', border: '1px solid #ddd6fe', padding: 16 }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Copy style={{ width: 14, height: 14 }} /> Share invite link
+              </p>
+              <p style={{ fontSize: 11, color: '#8b5cf6', marginBottom: 12 }}>
+                Anyone with this link can join the group — no email needed.
+              </p>
+              {generatingInvite ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0' }}>
+                  <div style={{ width: 16, height: 16, border: '2px solid #c4b5fd', borderTopColor: '#7c3aed', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                  <span style={{ fontSize: 13, color: '#7c3aed', fontWeight: 600 }}>Generating link…</span>
+                </div>
+              ) : inviteToken ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {/* Link display */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'white', borderRadius: 12, border: '1.5px solid #ddd6fe', padding: '8px 12px', overflow: 'hidden' }}>
+                    <span style={{ flex: 1, fontSize: 12, color: '#6d28d9', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {typeof window !== 'undefined' ? `${window.location.origin}/invite/${inviteToken}` : `/invite/${inviteToken}`}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={handleCopyInvite}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: copiedInvite ? '#d1fae5' : '#7c3aed', color: copiedInvite ? '#166534' : 'white', fontWeight: 700, fontSize: 13, padding: '9px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}
+                    >
+                      {copiedInvite ? (
+                        <><CheckCircle2 style={{ width: 14, height: 14 }} /> Copied!</>
+                      ) : (
+                        <><Copy style={{ width: 14, height: 14 }} /> Copy Link</>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleRevokeInvite}
+                      disabled={revokingInvite}
+                      title="Revoke this link"
+                      style={{ padding: '9px 12px', borderRadius: 10, border: '1.5px solid #ddd6fe', background: 'white', color: '#94a3b8', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}
+                    >
+                      {revokingInvite ? '…' : 'Revoke'}
+                    </button>
+                  </div>
+                  <p style={{ fontSize: 11, color: '#94a3b8', margin: 0, textAlign: 'center' }}>
+                    Link never expires · Revoke to disable it
+                  </p>
+                </div>
+              ) : (
+                <button
+                  onClick={handleGenerateInvite}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#7c3aed', color: 'white', fontWeight: 700, fontSize: 13, padding: '9px 14px', borderRadius: 10, border: 'none', cursor: 'pointer' }}
+                >
+                  <Copy style={{ width: 14, height: 14 }} /> Generate Link
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Add Member Form */}
           {showAddMember && (
