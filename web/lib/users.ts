@@ -22,8 +22,8 @@ const initializeDemoUser = async () => {
   }
 };
 
-// Initialize on module load
-initializeDemoUser().catch(console.error);
+// Note: demo user initialization removed from module load to avoid
+// database calls at build time. Call initializeDemoUser() explicitly if needed.
 
 export async function createUser(email: string, password: string, name: string) {
   try {
