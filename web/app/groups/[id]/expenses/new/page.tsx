@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, CheckCircle2, Receipt, Plus, StickyNote, Camera, X, ImageIcon } from "lucide-react";
+import { ArrowLeft, ChevronRight, CheckCircle2, Receipt, StickyNote, Camera, X, ImageIcon } from "lucide-react";
 
 interface Member {
   id: number;
@@ -459,49 +459,98 @@ export default function NewExpenseWizard() {
             <div className="alert-error" style={{ margin: '8px 24px' }}>{error}</div>
           )}
 
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, marginTop: 16 }}>
-            <div className="member-circle-container">
-              <div className="member-circle-orbit"></div>
-
-              <div className="member-circle-center" style={{ boxShadow: '0 4px 16px rgba(79,70,229,0.3)' }}>
-                <Plus style={{ width: 32, height: 32 }} />
-              </div>
-
-              {members.map((member, i) => {
-                const isSelected = selectedMemberIds.includes(member.id);
-                const angle = (i / members.length) * 2 * Math.PI - Math.PI / 2;
-                const radius = Math.round((containerSize / 320) * 130);
-                const x = Math.round(radius * Math.cos(angle));
-                const y = Math.round(radius * Math.sin(angle));
-                const avatarStyle = getAvatarStyle(member.id);
-
-                return (
-                  <div
-                    key={member.id}
-                    className="member-avatar"
-                    style={{
-                      transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
-                      background: isSelected ? avatarStyle.background : '#ffffff',
-                      color: isSelected ? avatarStyle.color : '#94a3b8',
-                      borderColor: isSelected ? avatarStyle.borderColor : '#e2e8f0',
-                      opacity: isSelected ? 1 : 0.75,
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => toggleMemberSelection(member.id)}
-                  >
-                    {getInitials(member.name)}
-                    {isSelected && (
-                      <div style={{ position: 'absolute', bottom: -4, right: -4, background: 'white', borderRadius: '50%' }}>
-                        <CheckCircle2 style={{ width: 16, height: 16, color: '#22c55e' }} />
-                      </div>
-                    )}
-                    <span className="member-name" style={{ color: isSelected ? '#1e293b' : '#94a3b8', fontWeight: isSelected ? 700 : 500 }}>
-                      {member.name.split(' ')[0]}
-                    </span>
-                  </div>
-                );
-              })}
+          {/* Select all / none quick actions */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px 4px' }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#64748b', margin: 0 }}>
+              {selectedMemberIds.length} of {members.length} selected
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setSelectedMemberIds(members.map(m => m.id))}
+                style={{ fontSize: 12, fontWeight: 700, color: '#4f46e5', background: '#eef2ff', border: 'none', borderRadius: 20, padding: '4px 12px', cursor: 'pointer' }}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setSelectedMemberIds([])}
+                style={{ fontSize: 12, fontWeight: 700, color: '#64748b', background: '#f1f5f9', border: 'none', borderRadius: 20, padding: '4px 12px', cursor: 'pointer' }}
+              >
+                None
+              </button>
             </div>
+          </div>
+
+          {/* Member list */}
+          <div style={{ flex: 1, padding: '8px 16px 16px', display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto' }}>
+            {members.map((member) => {
+              const isSelected = selectedMemberIds.includes(member.id);
+              const avatarStyle = getAvatarStyle(member.id);
+
+              return (
+                <div
+                  key={member.id}
+                  onClick={() => toggleMemberSelection(member.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 14,
+                    padding: '14px 16px',
+                    borderRadius: 16,
+                    cursor: 'pointer',
+                    background: isSelected ? avatarStyle.background : '#ffffff',
+                    border: `2px solid ${isSelected ? avatarStyle.borderColor : '#e2e8f0'}`,
+                    transition: 'all 0.15s ease',
+                    boxShadow: isSelected ? '0 2px 8px rgba(79,70,229,0.1)' : '0 1px 3px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  {/* Avatar */}
+                  <div style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: '50%',
+                    background: isSelected ? avatarStyle.background : '#f1f5f9',
+                    border: `2px solid ${isSelected ? avatarStyle.borderColor : '#e2e8f0'}`,
+                    color: isSelected ? avatarStyle.color : '#94a3b8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: 18,
+                    flexShrink: 0,
+                  }}>
+                    {getInitials(member.name)}
+                  </div>
+
+                  {/* Name */}
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: 15, fontWeight: isSelected ? 700 : 500, color: isSelected ? '#1e293b' : '#475569' }}>
+                      {member.name}
+                    </p>
+                    {member.id === paidById && (
+                      <p style={{ margin: '2px 0 0', fontSize: 11, fontWeight: 600, color: '#4f46e5' }}>Paid by this person</p>
+                    )}
+                  </div>
+
+                  {/* Checkbox */}
+                  <div style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: '50%',
+                    border: `2px solid ${isSelected ? '#22c55e' : '#cbd5e1'}`,
+                    background: isSelected ? '#22c55e' : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    transition: 'all 0.15s ease',
+                  }}>
+                    {isSelected && (
+                      <CheckCircle2 style={{ width: 16, height: 16, color: 'white', strokeWidth: 3 }} />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: 24, background: 'linear-gradient(to top, #f8f5ff 70%, transparent)', zIndex: 20 }}>
