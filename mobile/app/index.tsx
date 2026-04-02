@@ -9,7 +9,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter, useNavigation, useFocusEffect } from "expo-router";
+import { Redirect, useRouter, useNavigation, useFocusEffect } from "expo-router";
 import { groups } from "@/api/client";
 import { useAuth } from "@/context/auth";
 import { useResponsive } from "@/utils/responsive";
@@ -94,6 +94,9 @@ export default function HomeScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { user, logout } = useAuth();
+
+  // Guard: redirect to login if not authenticated
+  if (!user) return <Redirect href="/login" />;
   const r = useResponsive();
   const insets = useSafeAreaInsets();
 

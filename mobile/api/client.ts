@@ -94,3 +94,9 @@ export const exportApi = {
   getCSV: (groupId: number) =>
     api.get(`/groups/${groupId}/export`, { responseType: "text" }),
 };
+
+// Auth extras
+export const authApi = {
+  forgotPassword: (email: string) =>
+    api.post("/auth/forgot-password", { email }),
+};

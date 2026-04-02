@@ -87,3 +87,11 @@ model Settlement {
   fromUser User @relation("from", fields: [fromUserId], references: [id])
   toUser   User @relation("to", fields: [toUserId], references: [id])
 }
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}

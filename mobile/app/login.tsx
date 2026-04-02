@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Redirect, useRouter } from "expo-router";
 import {
   View,
   Text,
@@ -17,7 +18,11 @@ import { useResponsive } from "@/utils/responsive";
 const INDIGO = "#4f46e5";
 
 export default function LoginScreen() {
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, user } = useAuth();
+  const router = useRouter();
+
+  // Guard: redirect to home if already authenticated
+  if (user) return <Redirect href="/" />;
   const { s, fs, isTablet, hPad, contentWidth } = useResponsive();
   const insets = useSafeAreaInsets();
 
@@ -104,7 +109,16 @@ export default function LoginScreen() {
             onBlur={() => setEmailFocused(false)}
           />
 
-          <Text style={[styles.label, { fontSize: fs(11) }]}>Password</Text>
+          {/* Password label row with Forgot password link */}
+          <View style={styles.passwordLabelRow}>
+            <Text style={[styles.label, { fontSize: fs(11), marginBottom: 0, marginTop: 0 }]}>Password</Text>
+            <TouchableOpacity
+              onPress={() => router.push("/forgot-password")}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.forgotLink, { fontSize: fs(12) }]}>Forgot password?</Text>
+            </TouchableOpacity>
+          </View>
           <TextInput
             style={[
               styles.input,
@@ -269,5 +283,16 @@ const styles = StyleSheet.create({
     color: "#64748b",
     textAlign: "center",
     fontWeight: "500",
+  },
+  passwordLabelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+    marginTop: 2,
+  },
+  forgotLink: {
+    color: INDIGO,
+    fontWeight: "600",
   },
 });
