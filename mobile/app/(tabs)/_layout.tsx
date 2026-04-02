@@ -1,5 +1,6 @@
-// This directory is unused — routing is handled by the root app/_layout.tsx
-import { Redirect } from "expo-router";
+// Unused layout — routing handled by app/_layout.tsx
+import { Slot } from "expo-router";
+import React from "react";
 export default function TabsLayout() {
-  return <Redirect href="/" />;
+  return <Slot />;
 }

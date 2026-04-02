@@ -1,4 +1,5 @@
-import { Redirect } from "expo-router";
+// Unused — real home is app/index.tsx
+import { View } from "react-native";
 export default function TabsIndex() {
-  return <Redirect href="/" />;
+  return <View />;
 }
