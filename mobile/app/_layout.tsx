@@ -3,33 +3,19 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useAuth, AuthProvider } from "@/context/auth";
 import { setMobileUserId } from "@/api/client";
-import { useRouter, useSegments } from "expo-router";
 
 const INDIGO = "#4f46e5";
 
-function AuthGate() {
+function RootLayoutNav() {
   const { user } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
 
+  // Keep the API client in sync with auth state
   useEffect(() => {
     setMobileUserId(user ? user.userId : null);
+  }, [user]);
 
-    const inAuthGroup = segments[0] === "login";
-    if (!user && !inAuthGroup) {
-      router.replace("/login");
-    } else if (user && inAuthGroup) {
-      router.replace("/");
-    }
-  }, [user, segments]);
-
-  return null;
-}
-
-function RootLayoutNav() {
   return (
     <>
-      <AuthGate />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: INDIGO },
@@ -41,23 +27,14 @@ function RootLayoutNav() {
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen
           name="index"
-          options={{
-            title: "Splitwise",
-            headerRight: undefined,
-          }}
+          options={{ title: "SplitEase", headerRight: undefined }}
         />
         <Stack.Screen
           name="new-group"
           options={{ title: "New Group", presentation: "modal" }}
         />
-        <Stack.Screen
-          name="profile"
-          options={{ title: "My Profile" }}
-        />
-        <Stack.Screen
-          name="[id]/index"
-          options={{ title: "Group" }}
-        />
+        <Stack.Screen name="profile" options={{ title: "My Profile" }} />
+        <Stack.Screen name="[id]/index" options={{ title: "Group" }} />
         <Stack.Screen
           name="[id]/add-expense"
           options={{ title: "Add Expense", presentation: "modal" }}

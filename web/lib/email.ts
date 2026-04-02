@@ -226,6 +226,95 @@ export async function sendGroupAddedEmail({
   });
 }
 
+/** Sent to a user who requested a password reset */
+export async function sendPasswordResetEmail({
+  to,
+  resetToken,
+}: {
+  to: string;
+  resetToken: string;
+}) {
+  const resetUrl = `${APP_URL}/auth/reset-password?token=${resetToken}`;
+  const transporter = createTransporter();
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Reset your SplitEase password</title>
+</head>
+<body style="margin:0;padding:0;background:#f8f5ff;font-family:'Inter',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f5ff;padding:40px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:white;border-radius:24px;overflow:hidden;box-shadow:0 4px 24px rgba(79,70,229,0.10);">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:36px 40px;text-align:center;">
+            <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:16px;padding:10px 20px;">
+              <span style="background:white;border-radius:10px;width:32px;height:32px;display:inline-block;line-height:32px;text-align:center;font-weight:900;color:#4f46e5;font-size:16px;">S</span>
+              &nbsp;<span style="color:white;font-weight:900;font-size:20px;vertical-align:middle;">SplitEase</span>
+            </div>
+            <div style="margin-top:20px;font-size:32px;">🔐</div>
+            <h1 style="color:white;font-size:22px;font-weight:800;margin:8px 0 4px;">Reset Your Password</h1>
+            <p style="color:rgba(255,255,255,0.85);font-size:14px;margin:0;">We received a request to reset your SplitEase password</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px;">
+            <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 28px;">
+              Someone (hopefully you!) requested a password reset for the SplitEase account linked to
+              <strong>${to}</strong>. Click the button below to choose a new password.
+              This link is valid for <strong>1 hour</strong>.
+            </p>
+
+            <!-- CTA Button -->
+            <div style="text-align:center;margin-bottom:28px;">
+              <a href="${resetUrl}"
+                style="display:inline-block;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;font-size:15px;font-weight:700;text-decoration:none;padding:14px 40px;border-radius:50px;letter-spacing:0.3px;">
+                Reset Password →
+              </a>
+            </div>
+
+            <p style="color:#94a3b8;font-size:12px;text-align:center;margin:0 0 12px;">
+              If the button doesn't work, copy and paste this link into your browser:
+            </p>
+            <p style="background:#f1f5f9;border-radius:10px;padding:12px 16px;font-size:12px;color:#6366f1;word-break:break-all;margin:0 0 28px;">
+              <a href="${resetUrl}" style="color:#6366f1;text-decoration:none;">${resetUrl}</a>
+            </p>
+
+            <hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 20px;">
+            <p style="color:#94a3b8;font-size:12px;margin:0;text-align:center;">
+              If you didn't request a password reset, you can safely ignore this email.<br/>
+              Your password will remain unchanged.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f8fafc;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
+            <p style="color:#94a3b8;font-size:12px;margin:0;">© ${new Date().getFullYear()} SplitEase · Split expenses, stay friends.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  return transporter.sendMail({
+    from: FROM,
+    to,
+    subject: "Reset your SplitEase password",
+    html,
+  });
+}
+
 /** Sent to the person who owes money as a payment reminder */
 export async function sendReminderEmail({
   to,
