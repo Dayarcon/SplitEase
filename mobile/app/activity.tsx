@@ -279,6 +279,7 @@ export default function ActivityScreen() {
       <View style={[styles.tabBar, { paddingBottom: insets.bottom + 4 }]}>
         {[
           { label: "GROUPS", emoji: "👥", active: false, route: "/" },
+          { label: "EXPENSES", emoji: "🧾", active: false, route: "/expenses" },
           { label: "FRIENDS", emoji: "🤝", active: false, route: "/friends" },
           { label: "ACTIVITY", emoji: "🔔", active: true, route: "/activity" },
           { label: "ACCOUNT", emoji: "👤", active: false, route: "/profile" },
@@ -371,7 +372,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: "#F3F0FF", paddingTop: 10,
   },
   tabItem: { flex: 1, alignItems: "center", justifyContent: "center", position: "relative" },
-  tabLabel: { fontSize: 10, letterSpacing: 0.3 },
+  tabLabel: { fontSize: 9, letterSpacing: 0.2 },
   tabActiveBar: {
     position: "absolute", top: -10, left: "25%", right: "25%",
     height: 3, backgroundColor: PURPLE, borderRadius: 2,

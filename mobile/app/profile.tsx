@@ -224,6 +224,7 @@ export default function ProfileScreen() {
       <View style={[styles.tabBar, { paddingBottom: insets.bottom + 4 }]}>
         {[
           { label: "GROUPS", emoji: "👥", active: false, route: "/" },
+          { label: "EXPENSES", emoji: "🧾", active: false, route: "/expenses" },
           { label: "FRIENDS", emoji: "🤝", active: false, route: "/friends" },
           { label: "ACTIVITY", emoji: "🔔", active: false, route: "/activity" },
           { label: "ACCOUNT", emoji: "👤", active: true, route: "/profile" },
@@ -234,7 +235,7 @@ export default function ProfileScreen() {
             onPress={() => { if (!tab.active) router.push(tab.route as any); }}
             activeOpacity={0.7}
           >
-            <Text style={{ fontSize: 20, marginBottom: 2 }}>{tab.emoji}</Text>
+            <Text style={{ fontSize: 18, marginBottom: 1 }}>{tab.emoji}</Text>
             <Text style={[styles.tabLabel, { color: tab.active ? PURPLE : "#94a3b8", fontWeight: tab.active ? "700" : "500" }]}>
               {tab.label}
             </Text>
@@ -339,7 +340,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   tabItem: { flex: 1, alignItems: "center", justifyContent: "center", position: "relative" },
-  tabLabel: { fontSize: 10, letterSpacing: 0.3 },
+  tabLabel: { fontSize: 9, letterSpacing: 0.2 },
   tabActiveBar: {
     position: "absolute", top: -10, left: "25%", right: "25%",
     height: 3, backgroundColor: PURPLE, borderRadius: 2,

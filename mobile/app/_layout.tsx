@@ -34,6 +34,7 @@ function RootLayoutNav() {
           options={{ title: "New Group", presentation: "modal" }}
         />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
+        <Stack.Screen name="expenses" options={{ headerShown: false }} />
         <Stack.Screen name="activity" options={{ headerShown: false }} />
         <Stack.Screen name="friends" options={{ headerShown: false }} />
         <Stack.Screen name="[id]/index" options={{ headerShown: false }} />

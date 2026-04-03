@@ -8,6 +8,7 @@ import {
   Users, Plus, X, Check, Settings, Bell, User,
   Activity, Wallet, ChevronRight, Zap
 } from "lucide-react";
+import { AppShell } from "@/app/components/AppSidebar";
 
 interface Group {
   id: number;
@@ -342,195 +343,183 @@ export default function Home() {
   }
 
   return (
-    <div style={{ background: "#F8F5FF", minHeight: "100vh", paddingBottom: 96 }}>
-      <div style={{ maxWidth: 520, margin: "0 auto", padding: "0 16px" }}>
+    <AppShell activeTab="dashboard">
+      <div style={{ background: "#F8F5FF", minHeight: "100vh" }}>
 
-        {/* ── HEADER ── */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 0 16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Link href="/profile" style={{
-              width: 38, height: 38, borderRadius: "50%",
-              background: "linear-gradient(135deg, #7C3AED, #5B21B6)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 15, fontWeight: 700, color: "white", textDecoration: "none",
-            }}>
+        {/* ── DESKTOP TOP BAR ── */}
+        <div className="hidden lg:flex" style={{ alignItems: "center", justifyContent: "space-between", padding: "20px 32px 0", borderBottom: "1px solid #F3F0FF", background: "white", marginBottom: 0 }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 900, color: "#0f172a", margin: 0 }}>Dashboard</h1>
+            <p style={{ fontSize: 13, color: "#94a3b8", margin: "2px 0 0" }}>Welcome back, {session?.user?.name?.split(" ")[0]} 👋</p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 16 }}>
+            <button style={{ width: 38, height: 38, borderRadius: "50%", background: "#F8F5FF", border: "1px solid #F3F0FF", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Bell size={17} color="#64748b" />
+            </button>
+            <Link href="/profile" style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #7C3AED, #5B21B6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "white", textDecoration: "none" }}>
               {session?.user?.name?.charAt(0).toUpperCase() || "?"}
             </Link>
-            <span style={{ fontSize: 20, fontWeight: 900, color: "#7C3AED", letterSpacing: "-0.01em" }}>SplitEase</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        </div>
+
+        {/* ── MOBILE HEADER ── */}
+        <div className="lg:hidden" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 16px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Link href="/profile" style={{ width: 38, height: 38, borderRadius: "50%", background: "linear-gradient(135deg, #7C3AED, #5B21B6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, color: "white", textDecoration: "none" }}>
+              {session?.user?.name?.charAt(0).toUpperCase() || "?"}
+            </Link>
+            <span style={{ fontSize: 20, fontWeight: 900, color: "#7C3AED" }}>SplitEase</span>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
             <button style={{ width: 38, height: 38, borderRadius: "50%", background: "white", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
               <Bell size={18} color="#64748b" />
             </button>
-            <Link href="/profile" style={{ width: 38, height: 38, borderRadius: "50%", background: "white", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.08)", textDecoration: "none" }}>
+            <Link href="/profile" style={{ width: 38, height: 38, borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.08)", textDecoration: "none" }}>
               <Settings size={18} color="#64748b" />
             </Link>
           </div>
         </div>
 
-        {/* ── BALANCE CARD ── */}
-        {currentUserId && groups.length > 0 && (
-          <BalanceCard groups={groups} currentUserId={currentUserId} />
-        )}
+        {/* ── DESKTOP TWO-COLUMN LAYOUT ── */}
+        <div className="lg:grid lg:grid-cols-[1fr_340px] lg:gap-6 lg:p-8">
 
-        {/* ── CONTENT ── */}
-        {groups.length === 0 ? (
-          <OnboardingCard />
-        ) : (
-          <>
-            {/* ── ACTIVE GROUPS ── */}
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <h2 style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", margin: 0 }}>Active Groups</h2>
-                <Link href="/groups/new" style={{ fontSize: 13, fontWeight: 600, color: "#7C3AED", textDecoration: "none" }}>VIEW ALL</Link>
-              </div>
+          {/* ── LEFT COLUMN ── */}
+          <div style={{ padding: "0 16px" }} className="lg:p-0">
+            {/* Balance card */}
+            {currentUserId && groups.length > 0 && (
+              <BalanceCard groups={groups} currentUserId={currentUserId} />
+            )}
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {groups.map(group => {
-                  if (!currentUserId) return null;
-                  const expenses = group.expenses || [];
-                  const totalPaid = expenses.reduce((sum, exp) => sum + (exp.paidById === currentUserId ? exp.amount : 0), 0);
-                  const totalOwes = expenses.reduce((sum, exp) => {
-                    const split = exp.splits.find(s => s.userId === currentUserId);
-                    return sum + (split ? split.amount : 0);
-                  }, 0);
-                  const balance = totalPaid - totalOwes;
-                  const isOwed = balance > 0;
-                  const isOwes = balance < 0;
+            {/* Onboarding or groups list */}
+            {groups.length === 0 ? (
+              <OnboardingCard />
+            ) : (
+              <>
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                    <h2 style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", margin: 0 }}>Active Groups</h2>
+                    <Link href="/groups/new" style={{ fontSize: 13, fontWeight: 600, color: "#7C3AED", textDecoration: "none" }}>VIEW ALL</Link>
+                  </div>
 
-                  return (
-                    <Link
-                      key={group.id}
-                      href={`/groups/${group.id}`}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 14,
-                        background: "white", borderRadius: 16, padding: "14px 16px",
-                        textDecoration: "none", color: "inherit",
-                        boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
-                        border: "1px solid #F3F0FF",
-                        transition: "box-shadow 0.2s",
-                      }}
-                    >
-                      {/* Group emoji or initial */}
-                      <div style={{
-                        width: 46, height: 46, borderRadius: 14,
-                        background: "#F3F0FF",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: group.emoji ? 22 : 18, fontWeight: 700,
-                        color: group.emoji ? undefined : "#7C3AED",
-                        flexShrink: 0,
-                      }}>
-                        {group.emoji || group.name.charAt(0).toUpperCase()}
-                      </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {groups.map(group => {
+                      if (!currentUserId) return null;
+                      const expenses = group.expenses || [];
+                      const totalPaid = expenses.reduce((sum, exp) => sum + (exp.paidById === currentUserId ? exp.amount : 0), 0);
+                      const totalOwes = expenses.reduce((sum, exp) => {
+                        const split = exp.splits.find(s => s.userId === currentUserId);
+                        return sum + (split ? split.amount : 0);
+                      }, 0);
+                      const balance = totalPaid - totalOwes;
+                      const isOwed = balance > 0;
+                      const isOwes = balance < 0;
+                      return (
+                        <Link
+                          key={group.id}
+                          href={`/groups/${group.id}`}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 14,
+                            background: "white", borderRadius: 16, padding: "14px 16px",
+                            textDecoration: "none", color: "inherit",
+                            boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
+                            border: "1px solid #F3F0FF",
+                          }}
+                        >
+                          <div style={{ width: 46, height: 46, borderRadius: 14, background: "#F3F0FF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: group.emoji ? 22 : 18, fontWeight: 700, color: group.emoji ? undefined : "#7C3AED", flexShrink: 0 }}>
+                            {group.emoji || group.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontWeight: 700, fontSize: 15, color: "#0f172a", margin: "0 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{group.name}</p>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <AvatarStack members={group.members} max={3} />
+                              <span style={{ fontSize: 12, color: "#94a3b8" }}>{group.members.length} member{group.members.length !== 1 ? "s" : ""} · {expenses.length} bills</span>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "right", flexShrink: 0 }}>
+                            <p style={{ fontSize: 15, fontWeight: 800, margin: "0 0 2px", color: isOwed ? "#7C3AED" : isOwes ? "#dc2626" : "#94a3b8" }}>
+                              {isOwes ? "-" : "+"}₹{Math.abs(balance).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                            </p>
+                            <p style={{ fontSize: 11, fontWeight: 600, margin: 0, color: isOwed ? "#7C3AED" : isOwes ? "#dc2626" : "#94a3b8" }}>
+                              {isOwed ? "Owed" : isOwes ? "Owes" : "Settled"}
+                            </p>
+                          </div>
+                          <ChevronRight size={16} color="#d1d5db" style={{ flexShrink: 0, marginLeft: 4 }} />
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                      {/* Group info + avatar stack */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontWeight: 700, fontSize: 15, color: "#0f172a", margin: "0 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {group.name}
-                        </p>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <AvatarStack members={group.members} max={3} />
-                          <span style={{ fontSize: 12, color: "#94a3b8" }}>
-                            {group.members.length} member{group.members.length !== 1 ? "s" : ""} · {expenses.length} {expenses.length === 1 ? "bill" : "bills"}
-                          </span>
-                        </div>
-                      </div>
+                <Link href="/groups/new" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "white", border: "2px dashed #DDD6FE", borderRadius: 16, padding: "14px", textDecoration: "none", color: "#7C3AED", fontWeight: 700, fontSize: 14, marginBottom: 24 }}>
+                  <Plus size={18} /> Create New Group
+                </Link>
+              </>
+            )}
+          </div>
 
-                      {/* Balance */}
-                      <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <p style={{
-                          fontSize: 15, fontWeight: 800, margin: "0 0 2px",
-                          color: isOwed ? "#7C3AED" : isOwes ? "#dc2626" : "#94a3b8",
-                        }}>
-                          {isOwes ? "-" : "+"}₹{Math.abs(balance).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
-                        </p>
-                        <p style={{ fontSize: 11, fontWeight: 600, margin: 0, color: isOwed ? "#7C3AED" : isOwes ? "#dc2626" : "#94a3b8" }}>
-                          {isOwed ? "Owed" : isOwes ? "Owes" : "Settled"}
-                        </p>
-                      </div>
-
-                      <ChevronRight size={16} color="#d1d5db" style={{ flexShrink: 0, marginLeft: 4 }} />
-                    </Link>
-                  );
-                })}
-              </div>
+          {/* ── RIGHT COLUMN (desktop only) ── */}
+          <div className="hidden lg:block">
+            {/* Quick stats */}
+            <div style={{ background: "white", borderRadius: 20, padding: "20px", border: "1px solid #F3F0FF", marginBottom: 20 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 800, color: "#0f172a", margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
+                <span>⚡</span> Quick Add
+              </h3>
+              <button
+                onClick={() => setShowQuickAdd(true)}
+                style={{ width: "100%", padding: "12px", background: "#7C3AED", color: "white", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+              >
+                <Plus size={18} /> Add Expense
+              </button>
             </div>
 
-            {/* ── NEW GROUP CTA ── */}
-            <Link href="/groups/new" style={{
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              background: "white", border: "2px dashed #DDD6FE", borderRadius: 16, padding: "14px",
-              textDecoration: "none", color: "#7C3AED", fontWeight: 700, fontSize: 14,
-              marginBottom: 24,
-            }}>
-              <Plus size={18} />
-              Create New Group
-            </Link>
-          </>
+            {/* Recent activity panel */}
+            {groups.length > 0 && currentUserId && (
+              <div style={{ background: "white", borderRadius: 20, padding: "20px", border: "1px solid #F3F0FF" }}>
+                <h3 style={{ fontSize: 14, fontWeight: 800, color: "#0f172a", margin: "0 0 16px" }}>Recent Activity</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {groups.flatMap(g => (g.expenses || []).map(e => ({ ...e, groupName: g.name }))).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).slice(0, 5).map(exp => (
+                    <div key={exp.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: "1px solid #F8F5FF" }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: "#EDE9FE", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>🧾</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{exp.description}</p>
+                        <p style={{ fontSize: 11, color: "#94a3b8", margin: 0 }}>{(exp as any).groupName}</p>
+                      </div>
+                      <p style={{ fontSize: 13, fontWeight: 800, color: exp.paidById === currentUserId ? "#7C3AED" : "#dc2626", margin: 0, flexShrink: 0 }}>
+                        ₹{exp.amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                      </p>
+                    </div>
+                  ))}
+                  {groups.flatMap(g => g.expenses || []).length === 0 && (
+                    <p style={{ fontSize: 13, color: "#94a3b8", textAlign: "center", padding: "16px 0" }}>No activity yet</p>
+                  )}
+                </div>
+                <Link href="/activity" style={{ display: "block", textAlign: "center", marginTop: 12, fontSize: 13, fontWeight: 600, color: "#7C3AED", textDecoration: "none" }}>View all activity →</Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── MOBILE FAB ── */}
+        {groups.length > 0 && (
+          <button
+            className="lg:hidden"
+            onClick={() => setShowQuickAdd(true)}
+            style={{ position: "fixed", bottom: 84, right: 20, zIndex: 100, width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg, #7C3AED, #5B21B6)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 20px rgba(124,58,237,0.45)" }}
+          >
+            <Plus size={26} color="white" />
+          </button>
+        )}
+
+        {/* ── QUICK ADD MODAL ── */}
+        {showQuickAdd && (
+          <QuickAddModal
+            groups={groups}
+            currentUserId={currentUserId}
+            onClose={() => setShowQuickAdd(false)}
+            onSuccess={() => { setLoading(true); fetchGroups(); }}
+          />
         )}
       </div>
-
-      {/* ── FAB ── */}
-      {groups.length > 0 && (
-        <button
-          onClick={() => setShowQuickAdd(true)}
-          style={{
-            position: "fixed", bottom: 84, right: 20, zIndex: 100,
-            width: 56, height: 56, borderRadius: "50%",
-            background: "linear-gradient(135deg, #7C3AED, #5B21B6)",
-            border: "none", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 20px rgba(124,58,237,0.45)",
-          }}
-          title="Quick Add Expense"
-        >
-          <Plus size={26} color="white" />
-        </button>
-      )}
-
-      {/* ── QUICK ADD MODAL ── */}
-      {showQuickAdd && (
-        <QuickAddModal
-          groups={groups}
-          currentUserId={currentUserId}
-          onClose={() => setShowQuickAdd(false)}
-          onSuccess={() => { setLoading(true); fetchGroups(); }}
-        />
-      )}
-
-      {/* ── BOTTOM NAV ── */}
-      <nav style={{
-        position: "fixed", bottom: 0, left: 0, right: 0,
-        background: "white", borderTop: "1px solid #F3F0FF",
-        height: 68, display: "flex", alignItems: "center", justifyContent: "center",
-        zIndex: 50, boxShadow: "0 -4px 20px rgba(124,58,237,0.08)",
-      }}>
-        <div style={{ display: "flex", alignItems: "stretch", justifyContent: "space-around", width: "100%", maxWidth: 520, height: "100%" }}>
-          {[
-            { href: "/", icon: <Users size={22} />, label: "Groups", active: true },
-            { href: "/expenses", icon: <Wallet size={22} />, label: "Friends", active: false },
-            { href: "/expenses", icon: <Activity size={22} />, label: "Activity", active: false },
-            { href: "/profile", icon: <User size={22} />, label: "Account", active: false },
-          ].map(item => (
-            <Link
-              key={item.label}
-              href={item.href}
-              style={{
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                gap: 3, flex: 1, textDecoration: "none", padding: "8px 0",
-                color: item.active ? "#7C3AED" : "#94a3b8",
-                borderTop: item.active ? "2px solid #7C3AED" : "2px solid transparent",
-                transition: "color 0.2s",
-              }}
-            >
-              {item.icon}
-              <span style={{ fontSize: 10, fontWeight: item.active ? 700 : 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                {item.label}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </nav>
-    </div>
+    </AppShell>
   );
 }

@@ -9,6 +9,7 @@ import {
   ChevronRight, Wallet, Receipt,
   TrendingUp, TrendingDown, Check, Users, Plus, Smartphone
 } from "lucide-react";
+import { AppShell } from "@/app/components/AppSidebar";
 
 interface Group {
   id: number;
@@ -183,16 +184,17 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="app-page pb-24 pt-4">
-      <div className="app-shell animate-fadeIn">
-
-        {/* Back */}
-        <div style={{ marginBottom: 16 }}>
-          <Link href="/" className="btn-ghost inline-flex items-center gap-2" style={{ color: '#475569' }}>
-            <ArrowLeft style={{ width: 16, height: 16 }} />
-            <span style={{ fontSize: 14, fontWeight: 500 }}>Back</span>
-          </Link>
+    <AppShell activeTab="profile">
+    <div className="app-page pt-4" style={{ minHeight: "100vh", background: "#F8F5FF" }}>
+      {/* Desktop top bar */}
+      <div className="hidden lg:flex" style={{ alignItems: "center", justifyContent: "space-between", padding: "20px 32px 0", marginBottom: 8 }}>
+        <div>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: "#0f172a", margin: 0 }}>My Profile</h1>
+          <p style={{ fontSize: 13, color: "#64748b", margin: "2px 0 0" }}>Manage your account and preferences</p>
         </div>
+      </div>
+
+      <div className="app-shell animate-fadeIn lg:px-8 lg:py-4">
 
         {/* Profile Hero */}
         <div className="summary-card" style={{ marginBottom: 24 }}>
@@ -440,7 +442,7 @@ export default function ProfilePage() {
         )}
 
         {/* Sign Out */}
-        <div className="card" style={{ overflow: 'hidden' }}>
+        <div className="card lg:hidden" style={{ overflow: 'hidden' }}>
           <div style={{ padding: 4 }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '12px 16px 8px' }}>Actions</p>
             <button
@@ -460,28 +462,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-
-      {/* Bottom Nav */}
-      <nav className="nav-bottom">
-        <div className="max-w-[80rem] mx-auto flex items-center justify-around px-4">
-          <Link href="/" className="nav-bottom-item">
-            <Wallet size={22} className="mb-1" />
-            Home
-          </Link>
-          <Link href="/expenses" className="nav-bottom-item">
-            <Receipt size={22} className="mb-1" />
-            Expenses
-          </Link>
-          <Link href="/groups/new" className="nav-bottom-item">
-            <Plus size={22} className="mb-1" />
-            New Group
-          </Link>
-          <Link href="/profile" className="nav-bottom-item nav-bottom-active">
-            <User size={22} className="mb-1" />
-            Profile
-          </Link>
-        </div>
-      </nav>
     </div>
+    </AppShell>
   );
 }
