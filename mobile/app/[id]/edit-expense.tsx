@@ -9,7 +9,9 @@ import { groups, expenses } from "@/api/client";
 import { useAuth } from "@/context/auth";
 import { useResponsive } from "@/utils/responsive";
 
-const INDIGO = "#4f46e5";
+const PURPLE = "#7C3AED";
+const PURPLE_LIGHT = "#EDE9FE";
+const BG = "#F8F5FF";
 
 const CATEGORIES = [
   { id: "food", emoji: "🍽️", label: "Food" },
@@ -116,7 +118,7 @@ export default function EditExpenseScreen() {
     finally { setSubmitting(false); }
   };
 
-  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={INDIGO} /></View>;
+  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={PURPLE} /></View>;
 
   const numAmt = parseFloat(amount) || 0;
   const hPad = r.hPad + r.s(16);
@@ -212,7 +214,7 @@ export default function EditExpenseScreen() {
             members.map((m) => (
               <View key={m.id} style={[styles.splitRow, { gap: r.s(10), borderRadius: r.s(12), padding: r.s(12), marginBottom: r.s(6) }]}>
                 <View style={[styles.splitAv, { width: r.s(34), height: r.s(34), borderRadius: r.s(10) }]}>
-                  <Text style={{ fontSize: r.fs(14), fontWeight: "700", color: INDIGO }}>{m.name.charAt(0).toUpperCase()}</Text>
+                  <Text style={{ fontSize: r.fs(14), fontWeight: "700", color: PURPLE }}>{m.name.charAt(0).toUpperCase()}</Text>
                 </View>
                 <Text style={[styles.splitName, { fontSize: r.fs(14) }]}>{m.id === user?.userId ? "You" : m.name}</Text>
                 <Text style={[styles.splitAmt, { fontSize: r.fs(14) }]}>₹{(numAmt / members.length).toFixed(2)}</Text>
@@ -231,7 +233,7 @@ export default function EditExpenseScreen() {
                 return (
                   <View key={m.id} style={[styles.pctRow, { gap: r.s(8), borderRadius: r.s(10), padding: r.s(10), marginBottom: r.s(6) }]}>
                     <View style={[styles.splitAv, { width: r.s(32), height: r.s(32), borderRadius: r.s(10) }]}>
-                      <Text style={{ fontSize: r.fs(13), fontWeight: "700", color: INDIGO }}>{m.name.charAt(0).toUpperCase()}</Text>
+                      <Text style={{ fontSize: r.fs(13), fontWeight: "700", color: PURPLE }}>{m.name.charAt(0).toUpperCase()}</Text>
                     </View>
                     <Text style={[styles.pctName, { fontSize: r.fs(13) }]}>{m.id === user?.userId ? "You" : m.name}</Text>
                     <View style={styles.pctInWrap}>
@@ -281,11 +283,11 @@ export default function EditExpenseScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#f1f0ff" },
+  root: { flex: 1, backgroundColor: BG },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   formCard: {
     backgroundColor: "#fff",
-    shadowColor: "#4f46e5",
+    shadowColor: "#7C3AED",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 10,
@@ -295,22 +297,22 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1.5, borderColor: "#e2e8f0", borderRadius: 12, color: "#0f172a", backgroundColor: "#f8fafc" },
   catGrid: { flexDirection: "row", flexWrap: "wrap" },
   catBtn: { flexDirection: "row", alignItems: "center", borderWidth: 1.5, borderColor: "#e2e8f0", backgroundColor: "#f8f5ff" },
-  catBtnActive: { borderColor: INDIGO, backgroundColor: "#eef2ff" },
+  catBtnActive: { borderColor: PURPLE, backgroundColor: "#EDE9FE" },
   catLabel: { fontWeight: "600", color: "#64748b" },
-  catLabelActive: { color: INDIGO },
+  catLabelActive: { color: PURPLE },
   paidPill: { flexDirection: "row", alignItems: "center", borderWidth: 1.5, borderColor: "#e2e8f0", backgroundColor: "#f8fafc" },
-  paidPillActive: { borderColor: INDIGO, backgroundColor: INDIGO },
+  paidPillActive: { borderColor: PURPLE, backgroundColor: PURPLE },
   pillAv: { backgroundColor: "#e2e8f0", alignItems: "center", justifyContent: "center" },
   pillAvActive: { backgroundColor: "rgba(255,255,255,0.25)" },
   pillName: { fontWeight: "600", color: "#475569" },
   pillNameActive: { color: "#fff" },
   toggleRow: { flexDirection: "row" },
   toggleBtn: { flex: 1, borderWidth: 1.5, borderColor: "#e2e8f0", backgroundColor: "#f8fafc", alignItems: "center" },
-  toggleActive: { borderColor: INDIGO, backgroundColor: INDIGO },
+  toggleActive: { borderColor: PURPLE, backgroundColor: PURPLE },
   toggleText: { fontWeight: "700", color: "#64748b" },
   toggleTextActive: { color: "#fff" },
   splitRow: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderWidth: 1, borderColor: "#f1f5f9" },
-  splitAv: { backgroundColor: "#eef2ff", alignItems: "center", justifyContent: "center" },
+  splitAv: { backgroundColor: "#EDE9FE", alignItems: "center", justifyContent: "center" },
   splitName: { flex: 1, fontWeight: "600", color: "#0f172a" },
   splitAmt: { fontWeight: "700", color: "#475569" },
   pctHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
@@ -320,13 +322,13 @@ const styles = StyleSheet.create({
   pctRow: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderWidth: 1, borderColor: "#f1f5f9" },
   pctName: { flex: 1, fontWeight: "600", color: "#0f172a" },
   pctInWrap: { flexDirection: "row", alignItems: "center", gap: 2 },
-  pctIn: { borderWidth: 1.5, borderColor: "#c7d2fe", color: "#0f172a", backgroundColor: "#f8fafc", textAlign: "center" },
-  pctSign: { fontWeight: "700", color: INDIGO },
+  pctIn: { borderWidth: 1.5, borderColor: "#C4B5FD", color: "#0f172a", backgroundColor: "#f8fafc", textAlign: "center" },
+  pctSign: { fontWeight: "700", color: PURPLE },
   pctAmt: { fontWeight: "600", color: "#475569", textAlign: "right" },
   resetBtn: { backgroundColor: "#f8fafc", borderWidth: 1, borderColor: "#e2e8f0", alignItems: "center" },
   resetBtnText: { color: "#64748b", fontWeight: "600" },
-  bottomBar: { backgroundColor: "#f1f0ff", paddingTop: 16, borderTopWidth: 1, borderColor: "#e2e8f0" },
-  btn: { backgroundColor: INDIGO, alignItems: "center" },
-  btnDisabled: { backgroundColor: "#a5b4fc" },
+  bottomBar: { backgroundColor: BG, paddingTop: 16, borderTopWidth: 1, borderColor: "#e2e8f0" },
+  btn: { backgroundColor: PURPLE, alignItems: "center" },
+  btnDisabled: { backgroundColor: "#C4B5FD" },
   btnText: { color: "#fff", fontWeight: "700" },
 });

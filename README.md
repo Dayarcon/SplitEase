@@ -1,159 +1,126 @@
-# Splitwise - Cost Splitting App
+# 💎 SplitEase — Modern Expense Splitting
 
-A full-featured cost-splitting application built with Next.js (web) and React Native/Expo (mobile). Track shared expenses and automatically calculate who owes whom.
+[![Next.js](https://img.shields.io/badge/Next.js-16.2.1-black?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2.4-61DAFB?logo=react)](https://reactjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.2.2-06B6D4?logo=tailwind-css)](https://tailwindcss.com/)
+[![Expo](https://img.shields.io/badge/Expo-SDK-000020?logo=expo)](https://expo.dev/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+**SplitEase** is a premium, production-grade cost-splitting application designed for seamless group expense management. Featuring a stunning **glassmorphic UI**, a **greedy settlement engine**, and **full-stack mobile/web integration**, it's the ultimate tool for friends, families, and travel buddies.
 
-- ✅ Create groups and add members
-- ✅ Track shared expenses
-- ✅ Automatically calculate balances
-- ✅ View settlement recommendations
-- ✅ Support for equal or custom splits
-- ✅ Web and mobile interfaces
+---
 
-## Project Structure
+## ✨ Features
 
+### 🎨 Premium Glassmorphic UI
+- **Modern Aesthetic**: Built with a custom design system featuring glassmorphism, dynamic animations, and curated color tokens.
+- **Responsive Dashboard**: Fully optimized for desktops and mobile browsers with consistent branding.
+- **Micro-interactions**: Enhanced UX with Framer Motion transitions and Lucide icons.
+
+### 🧠 Smart Settlement Engine
+- **Greedy Algorithm**: Automatically calculates the minimum number of transactions required to settle all debts in a group.
+- **Multi-Split Support**: Split expenses equally or assign custom amounts/percentages to specific members.
+- **Settlement Recommendations**: Real-time advice on "who owes whom" with one-tap settlement recording.
+
+### 📊 Comprehensive Management
+- **Group Creation Wizard**: Easily create groups, add members, and manage roles.
+- **Receipt Management**: Upload and track receipts for every expense via the integrated file upload API.
+- **Activity Feed**: A real-time audit trail of all expense creations, edits, and settlements.
+- **Invitation System**: Invite friends to join your groups via email (Nodemailer integration).
+
+### 🚀 Cross-Platform Ready
+- **Next.js Web App**: High-performance frontend and backend API.
+- **Expo Mobile App**: Native iOS and Android experience with shared business logic.
+
+---
+
+## 🛠️ Technology Stack
+
+### Web & Backend (Next.js)
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
+- **Library**: [React 19](https://react.dev/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/) (Modern design tokens)
+- **Animations**: [Framer Motion 12](https://www.framer.com/motion/)
+- **Auth**: [NextAuth.js 4](https://next-auth.js.org/)
+- **Database**: [Prisma ORM](https://www.prisma.io/) with SQLite (Dev) / PostgreSQL (Prod)
+- **Icons**: [Lucide React](https://lucide.dev/)
+
+### Mobile (React Native)
+- **Framework**: [Expo SDK](https://expo.dev/)
+- **Routing**: [Expo Router](https://docs.expo.dev/router/introduction/)
+- **Network**: Axios with centralized API client
+
+---
+
+## 📂 Project Structure
+
+```bash
+SplitEase/
+├── web/              # Next.js Full-Stack Application
+│   ├── app/          # App Router (Pages, API, Layouts)
+│   ├── prisma/       # Database Schema & Migrations
+│   ├── lib/          # Balance Algorithms & Utilities
+│   └── components/   # Glassmorphic UI Component Library
+└── mobile/           # Expo Native Mobile Application
+    ├── app/          # Navigation Screens (Expo Router)
+    ├── api/          # Shared API Integration
+    └── components/   # Cross-platform Mobile Components
 ```
-splitwise/
-├── web/              # Next.js web app (backend + frontend)
-│   ├── app/          # Next.js App Router pages and API routes
-│   ├── prisma/       # Database schema and migrations
-│   ├── lib/          # Shared utilities (balance calculation)
-│   └── package.json
-└── mobile/           # Expo React Native app
-    ├── app/          # Expo Router screens
-    ├── api/          # API client
-    └── package.json
-```
 
-## Technology Stack
+---
 
-### Web
-- **Framework**: Next.js 16 with TypeScript
-- **Styling**: Tailwind CSS
-- **Database**: SQLite with Prisma ORM
-- **API**: REST with Next.js API Routes
+## 🚀 Getting Started
 
-### Mobile
-- **Framework**: Expo (React Native)
-- **Routing**: Expo Router
-- **HTTP Client**: Axios
-- **API**: Connects to the same backend API
+### 1. Prerequisites
+- **Node.js**: v20 or higher
+- **npm**: v10 or higher
 
-## Getting Started
+### 2. Installation & Setup
 
-### Prerequisites
-- Node.js v20+
-- npm or yarn
-
-### Installation & Setup
-
-#### 1. Web App
-
+#### Web App
 ```bash
 cd web
 npm install
-npm run db:push  # Create the database
-npm run dev      # Start development server
+npm run db:push     # Initialize local SQLite database
+npm run dev         # Start web server at http://localhost:3000
 ```
 
-The web app will be available at `http://localhost:3000`
-
-#### 2. Mobile App
-
+#### Mobile App
 ```bash
 cd mobile
 npm install
-npm run start    # Start Expo development server
+npm run start       # Start Expo Development Server
 ```
+*Tip: Press `w` in the Expo terminal for a web preview, or scan the QR code with [Expo Go](https://expo.dev/expo-go).*
 
-Then:
-- Press `w` for web preview
-- Scan QR code with Expo Go app for iOS/Android testing
-- Or use `npm run ios` or `npm run android` directly
+---
 
-## Usage
+## 📡 Core API Endpoints
 
-### Web App
-1. Open http://localhost:3000
-2. Click "New Group" to create a group
-3. Add members by providing their name and email
-4. Select members for the group
-5. Create group
-6. Add expenses by clicking "Add Expense"
-7. Enter amount, description, who paid, and how to split
-8. View balances and settlement recommendations
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/api/users` | `GET` / `POST` | Manage user profiles and registration |
+| `/api/groups` | `GET` / `POST` | Create and list expense groups |
+| `/api/groups/:id/balances` | `GET` | Fetch real-time debt calculations |
+| `/api/groups/:id/expenses` | `POST` | Add new expenses with split logic |
+| `/api/upload` | `POST` | Handle receipt image uploads |
 
-### Mobile App
-1. Launch Expo app
-2. Create a new group with members
-3. Add expenses to track costs
-4. View real-time balances
-5. See who owes whom
+---
 
-## API Endpoints
+## 🗺️ Roadmap
 
-### Users
-- `GET /api/users` - List all users
-- `POST /api/users` - Create new user
+- [x] **Phase 1**: Glassmorphic UI & Core Greedy Algorithm.
+- [x] **Phase 2**: Mobile App Prototype (Expo).
+- [ ] **Phase 3**: Integration of Stripe/Payment APIs.
+- [ ] **Phase 4**: Production Database Migration (PostgreSQL).
+- [ ] **Phase 5**: Advanced Analytics & Recurring Expenses.
 
-### Groups
-- `GET /api/groups` - List all groups
-- `POST /api/groups` - Create new group
-- `POST /api/groups/:id/members` - Add member to group
+---
 
-### Expenses
-- `GET /api/groups/:id/expenses` - Get group expenses
-- `POST /api/groups/:id/expenses` - Add expense
+## 📄 License
 
-### Balances & Settlements
-- `GET /api/groups/:id/balances` - Calculate group balances
-- `POST /api/groups/:id/settle` - Record settlement
+This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
 
-## Database Schema
+---
 
-- **User**: id, name, email
-- **Group**: id, name, createdAt
-- **GroupMember**: id, groupId, userId
-- **Expense**: id, description, amount, paidById, groupId
-- **ExpenseSplit**: id, expenseId, userId, amount
-- **Settlement**: id, groupId, fromUserId, toUserId, amount
-
-## How Balance Calculation Works
-
-The app uses a greedy algorithm to minimize the number of transactions needed to settle all debts:
-
-1. Calculate each user's net balance (paid - owed)
-2. Separate users into debtors and creditors
-3. Match debtors with creditors greedily
-4. Generate minimum number of transactions
-
-Example:
-- Alice paid $100, owes $50 → balance: +$50
-- Bob paid $0, owes $40 → balance: -$40
-- Charlie paid $0, owes $20 → balance: -$20
-
-Settlement:
-- Bob pays Alice $40
-- Charlie pays Alice $20
-
-## Development Notes
-
-- The database is SQLite (`dev.db`) stored locally - perfect for development
-- The mobile app connects to the backend via the API (configure `EXPO_PUBLIC_API_URL` in `.env.local`)
-- All data is stored in the SQLite database
-- No authentication implemented - designed for local/group use
-
-## Future Enhancements
-
-- User authentication (JWT)
-- Firebase/cloud database support
-- Payment history and analytics
-- Export to CSV/PDF
-- Multi-currency support
-- Recurring expenses
-- Bill reminders
-
-## License
-
-MIT
+> Built with ❤️ by the SplitEase Team. Elevate your expense splitting experience.

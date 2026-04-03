@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import {
-  ArrowLeft, Plus, Users, Wallet,
+  ArrowLeft, Plus, Users, Wallet, Activity, User,
   CheckCircle2, AlertCircle, Handshake,
   PartyPopper, Receipt, ArrowRight, Edit, Trash2,
   ChevronDown, ChevronUp, UserMinus, History, X,
@@ -376,10 +376,10 @@ export default function GroupDetail() {
 
   if (loading) {
     return (
-      <div className="app-page flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p className="text-indigo-600 font-semibold">Loading group details...</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#F8F5FF" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ width: 44, height: 44, border: "4px solid #EDE9FE", borderTopColor: "#7C3AED", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+          <p style={{ color: "#7C3AED", fontWeight: 600, fontSize: 15 }}>Loading group details...</p>
         </div>
       </div>
     );
@@ -387,14 +387,12 @@ export default function GroupDetail() {
 
   if (!group) {
     return (
-      <div className="app-page flex items-center justify-center min-h-screen">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#F8F5FF" }}>
         <div className="card card-lg px-10 py-12 text-center max-w-md">
           <AlertCircle style={{ width: 64, height: 64, color: '#fb7185', margin: '0 auto 16px' }} />
           <p style={{ fontSize: 24, fontWeight: 900, color: '#1e293b', marginBottom: 8 }}>Group not found</p>
           <p style={{ color: '#64748b', marginBottom: 24 }}>The requested group does not exist or you don't have access.</p>
-          <Link href="/" className="btn-primary">
-            Return to Dashboard
-          </Link>
+          <Link href="/" className="btn-primary">Return to Dashboard</Link>
         </div>
       </div>
     );
@@ -409,76 +407,80 @@ export default function GroupDetail() {
     group.members.find(m => m.user.id === userId)?.user.name || "Unknown";
 
   return (
-    <div className="app-page pb-24">
-      <div className="app-shell animate-fadeIn">
+    <div style={{ background: "#F8F5FF", minHeight: "100vh", paddingBottom: 96 }}>
+      <div style={{ maxWidth: 520, margin: "0 auto", padding: "0 16px" }}>
 
-        {/* Back button */}
-        <div style={{ marginBottom: 16, paddingTop: 16 }}>
-          <Link href="/" className="btn-ghost inline-flex items-center gap-2" style={{ color: '#475569' }}>
-            <ArrowLeft style={{ width: 16, height: 16 }} />
-            <span style={{ fontSize: 14, fontWeight: 500 }}>Back</span>
-          </Link>
+        {/* ── HEADER ── */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 0 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Link href="/" style={{ width: 36, height: 36, borderRadius: "50%", background: "white", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.08)", textDecoration: "none" }}>
+              <ArrowLeft size={18} color="#64748b" />
+            </Link>
+            <span style={{ fontSize: 20, fontWeight: 900, color: "#7C3AED", letterSpacing: "-0.01em" }}>SplitEase</span>
+          </div>
+          <button
+            onClick={() => setShowGroupSettings(!showGroupSettings)}
+            style={{ width: 38, height: 38, borderRadius: "50%", background: "white", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}
+          >
+            <Settings size={18} color="#64748b" />
+          </button>
         </div>
 
-        {/* Hero Banner */}
-        <div className="summary-card" style={{ marginBottom: 24 }}>
-          <div style={{ position: 'relative', zIndex: 10 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <p style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Group</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                  {(group as any).emoji && (
-                    <span style={{ fontSize: 'clamp(24px, 5vw, 36px)', lineHeight: 1 }}>{(group as any).emoji}</span>
-                  )}
-                  <h1 style={{ fontSize: 'clamp(22px, 5vw, 36px)', fontWeight: 900, color: 'white', lineHeight: 1.1, margin: 0 }}>
-                    {group.name}
-                  </h1>
+        {/* ── GROUP BALANCE CARD ── */}
+        <div style={{ background: "#EDE9FE", borderRadius: 20, padding: "22px 20px", marginBottom: 20 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "#7C3AED", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 4px" }}>
+            {(group as any).emoji && <span style={{ marginRight: 6 }}>{(group as any).emoji}</span>}
+            {group.name}
+          </p>
+          <p style={{ fontSize: 11, fontWeight: 600, color: "#8B5CF6", margin: "0 0 6px" }}>
+            {group.members.length} members · {group.expenses.length} expenses
+          </p>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "#7C3AED", textTransform: "uppercase", letterSpacing: "0.08em", margin: "12px 0 4px" }}>
+            Current Balance
+          </p>
+          <p style={{ fontSize: 36, fontWeight: 900, color: "#1a0533", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
+            {sym}{Math.abs(myBalance).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+          </p>
+          {myBalance !== 0 && (
+            <p style={{ fontSize: 13, color: myBalance > 0 ? "#16a34a" : "#dc2626", fontWeight: 600, margin: "0 0 16px" }}>
+              {myBalance > 0 ? "↑ You are owed money" : "↓ You owe money"}
+            </p>
+          )}
+          {/* Member avatar stack */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ display: "flex" }}>
+              {group.members.slice(0, 4).map((m, i) => (
+                <div key={m.userId} style={{ width: 30, height: 30, borderRadius: "50%", background: ["#7C3AED","#A78BFA","#6D28D9","#8B5CF6"][i % 4], border: "2px solid #EDE9FE", marginLeft: i === 0 ? 0 : -8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "white", zIndex: group.members.length - i }}>
+                  {m.user.name.charAt(0).toUpperCase()}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 14, color: '#cbd5e1' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Users style={{ width: 16, height: 16 }} />
-                    {group.members.length} members
-                  </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Receipt style={{ width: 16, height: 16 }} />
-                    {group.expenses.length} expenses
-                  </span>
+              ))}
+              {group.members.length > 4 && (
+                <div style={{ width: 30, height: 30, borderRadius: "50%", background: "white", border: "2px solid #EDE9FE", marginLeft: -8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#7C3AED" }}>
+                  +{group.members.length - 4}
                 </div>
-              </div>
-              <div>
-                <Link href={`/groups/${groupId}/expenses/new`} className="btn-primary" style={{ display: 'inline-flex' }}>
-                  <Plus style={{ width: 16, height: 16 }} />
-                  Add Expense
-                </Link>
-              </div>
+              )}
             </div>
+            <span style={{ fontSize: 12, color: "#8B5CF6", fontWeight: 500 }}>{group.members.length} members traveling</span>
+          </div>
 
-            {/* My Balance Banner */}
-            {currentUserId && myBalance !== 0 && (
-              <div style={{
-                marginTop: 20,
-                borderRadius: 16,
-                padding: 16,
-                border: `1px solid ${myBalance > 0 ? 'rgba(52,211,153,0.4)' : 'rgba(251,113,133,0.4)'}`,
-                background: myBalance > 0 ? 'rgba(52,211,153,0.15)' : 'rgba(251,113,133,0.15)',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div>
-                    <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Your Balance</p>
-                    <p style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: 900, color: myBalance > 0 ? '#6ee7b7' : '#fda4af', marginBottom: 4 }}>
-                      {myBalance > 0 ? '+' : ''}{sym}{Math.abs(myBalance).toFixed(0)}
-                    </p>
-                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
-                      {myBalance > 0 ? 'You are owed money' : 'You owe money'}
-                    </p>
-                  </div>
-                  {myBalance > 0
-                    ? <TrendingUp style={{ width: 40, height: 40, color: 'rgba(110,231,183,0.6)' }} />
-                    : <TrendingDown style={{ width: 40, height: 40, color: 'rgba(253,164,175,0.6)' }} />
-                  }
-                </div>
-              </div>
+          {/* Settle Up & Add Expense buttons */}
+          <div style={{ display: "flex", gap: 10 }}>
+            {transactions.length > 0 && (
+              <button
+                onClick={() => { if (transactions.length > 0) { setSettleTransaction(transactions[0]); setShowSettleModal(true); } }}
+                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#7C3AED", color: "white", fontWeight: 700, fontSize: 14, padding: "12px 16px", borderRadius: 12, border: "none", cursor: "pointer", boxShadow: "0 4px 12px rgba(124,58,237,0.35)" }}
+              >
+                <CheckCircle2 size={16} />
+                Settle Up
+              </button>
             )}
+            <Link
+              href={`/groups/${groupId}/expenses/new`}
+              style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: transactions.length > 0 ? "white" : "#7C3AED", color: transactions.length > 0 ? "#7C3AED" : "white", fontWeight: 700, fontSize: 14, padding: "12px 16px", borderRadius: 12, border: transactions.length > 0 ? "none" : "none", textDecoration: "none", boxShadow: transactions.length > 0 ? "0 2px 8px rgba(0,0,0,0.08)" : "0 4px 12px rgba(124,58,237,0.35)" }}
+            >
+              <Plus size={16} />
+              Add Expense
+            </Link>
           </div>
         </div>
 
@@ -507,18 +509,18 @@ export default function GroupDetail() {
         )}
 
         {/* Stats Row */}
-        <div className="stats-grid" style={{ marginBottom: 24 }}>
-          <div className="card card-sm" style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Spent</p>
-            <p style={{ fontSize: 'clamp(14px, 3.5vw, 22px)', fontWeight: 900, color: '#0f172a', margin: 0 }}>{sym}{totalExpenses.toFixed(0)}</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
+          <div style={{ background: "white", borderRadius: 14, padding: "12px 10px", textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Spent</p>
+            <p style={{ fontSize: 16, fontWeight: 900, color: "#0f172a", margin: 0 }}>{sym}{totalExpenses.toFixed(0)}</p>
           </div>
-          <div className="card card-sm" style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Settled</p>
-            <p style={{ fontSize: 'clamp(14px, 3.5vw, 22px)', fontWeight: 900, color: '#16a34a', margin: 0 }}>{sym}{totalSettled.toFixed(0)}</p>
+          <div style={{ background: "white", borderRadius: 14, padding: "12px 10px", textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: "#16a34a", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Settled</p>
+            <p style={{ fontSize: 16, fontWeight: 900, color: "#16a34a", margin: 0 }}>{sym}{totalSettled.toFixed(0)}</p>
           </div>
-          <div className="card card-sm" style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Pending</p>
-            <p style={{ fontSize: 'clamp(14px, 3.5vw, 22px)', fontWeight: 900, color: '#4f46e5', margin: 0 }}>{transactions.length}</p>
+          <div style={{ background: "white", borderRadius: 14, padding: "12px 10px", textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: "#7C3AED", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Pending</p>
+            <p style={{ fontSize: 16, fontWeight: 900, color: "#7C3AED", margin: 0 }}>{transactions.length}</p>
           </div>
         </div>
 
@@ -542,9 +544,9 @@ export default function GroupDetail() {
             health: '💊 Health', utilities: '🔧 Utilities', other: '💡 Other',
           };
           return (
-            <div className="card card-lg" style={{ marginBottom: 24 }}>
-              <h2 className="section-header" style={{ marginBottom: 16 }}>
-                <Receipt style={{ width: 20, height: 20, color: '#4f46e5' }} /> Spending by Category
+            <div style={{ background: "white", borderRadius: 16, padding: "18px 16px", marginBottom: 20, boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, fontWeight: 800, color: "#0f172a", margin: "0 0 14px" }}>
+                📊 Insights
               </h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {entries.map(([cat, total]) => {
@@ -568,10 +570,10 @@ export default function GroupDetail() {
         })()}
 
         {/* Settle Up Section */}
-        <div className="card card-lg" style={{ marginBottom: 24 }}>
+        <div style={{ background: "white", borderRadius: 16, padding: "18px 16px", marginBottom: 20, boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <h2 className="section-header" style={{ margin: 0 }}>
-              <Handshake style={{ width: 20, height: 20, color: '#4f46e5' }} />
+            <h2 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, fontWeight: 800, color: "#0f172a", margin: 0 }}>
+              <Handshake style={{ width: 18, height: 18, color: '#7C3AED' }} />
               {transactions.length > 0 ? 'Settle Up' : 'All Settled!'}
             </h2>
             {settlements.length > 0 && (
@@ -769,10 +771,10 @@ export default function GroupDetail() {
         </div>
 
         {/* Members & Balances */}
-        <div className="card card-lg" style={{ marginBottom: 24 }}>
+        <div style={{ background: "white", borderRadius: 16, padding: "18px 16px", marginBottom: 20, boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <h2 className="section-header" style={{ margin: 0 }}>
-              <Wallet style={{ width: 20, height: 20, color: '#4f46e5' }} /> Members & Balances
+            <h2 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, fontWeight: 800, color: "#0f172a", margin: 0 }}>
+              <Users style={{ width: 18, height: 18, color: '#7C3AED' }} /> Members & Balances
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <button
@@ -979,8 +981,8 @@ export default function GroupDetail() {
         <div style={{ marginBottom: 32 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <h2 className="section-header" style={{ margin: 0 }}>
-                <Receipt style={{ width: 20, height: 20, color: '#4f46e5' }} /> {showActivity ? 'Activity' : 'Expenses'}
+              <h2 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                <Receipt style={{ width: 18, height: 18, color: '#7C3AED' }} /> {showActivity ? 'Activity' : 'Expenses'}
               </h2>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1268,7 +1270,7 @@ export default function GroupDetail() {
                     <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>pays</p>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 16px' }}>
-                    <p style={{ fontSize: 24, fontWeight: 900, color: '#4f46e5', margin: 0 }}>{sym}{settleTransaction.amount.toFixed(0)}</p>
+                    <p style={{ fontSize: 24, fontWeight: 900, color: '#7C3AED', margin: 0 }}>{sym}{settleTransaction.amount.toFixed(0)}</p>
                     <ArrowRight style={{ width: 20, height: 20, color: '#818cf8', marginTop: 4 }} />
                   </div>
                   <div style={{ textAlign: 'center', flex: 1 }}>
@@ -1425,6 +1427,40 @@ export default function GroupDetail() {
         )}
 
       </div>
+
+      {/* ── BOTTOM NAV ── */}
+      <nav style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        background: "white", borderTop: "1px solid #F3F0FF",
+        height: 68, display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 50, boxShadow: "0 -4px 20px rgba(124,58,237,0.08)",
+      }}>
+        <div style={{ display: "flex", alignItems: "stretch", justifyContent: "space-around", width: "100%", maxWidth: 520, height: "100%" }}>
+          {[
+            { href: "/", icon: <Users size={22} />, label: "Groups", active: false },
+            { href: "/expenses", icon: <Wallet size={22} />, label: "Friends", active: false },
+            { href: "/expenses", icon: <Activity size={22} />, label: "Activity", active: false },
+            { href: "/profile", icon: <User size={22} />, label: "Account", active: false },
+          ].map(item => (
+            <Link
+              key={item.label}
+              href={item.href}
+              style={{
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                gap: 3, flex: 1, textDecoration: "none", padding: "8px 0",
+                color: "#94a3b8",
+                borderTop: "2px solid transparent",
+                transition: "color 0.2s",
+              }}
+            >
+              {item.icon}
+              <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                {item.label}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 }

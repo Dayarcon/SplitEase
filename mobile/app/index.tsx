@@ -1,22 +1,23 @@
-import React, { useState, useCallback, useLayoutEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
+  View, Text, StyleSheet, FlatList, TouchableOpacity,
+  ActivityIndicator, RefreshControl, ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Redirect, useRouter, useNavigation, useFocusEffect } from "expo-router";
+import { Redirect, useRouter, useFocusEffect } from "expo-router";
 import { groups } from "@/api/client";
 import { useAuth } from "@/context/auth";
 import { useResponsive } from "@/utils/responsive";
 
-const INDIGO = "#4f46e5";
+const PURPLE = "#7C3AED";
+const PURPLE_LIGHT = "#EDE9FE";
+const BG = "#F8F5FF";
 
-const CARD_ACCENTS = ["#4f46e5", "#0ea5e9", "#10b981", "#f97316", "#ec4899", "#8b5cf6", "#14b8a6", "#f59e0b"];
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  INR: "₹", USD: "$", EUR: "€", GBP: "£", JPY: "¥", AED: "د.إ",
+};
+
+const AVATAR_COLORS = [PURPLE, "#A78BFA", "#6D28D9", "#8B5CF6", "#C4B5FD"];
 
 interface Group {
   id: number;
@@ -24,67 +25,89 @@ interface Group {
   currency?: string;
   emoji?: string;
   members: Array<{ userId: number; user: { id: number; name: string } }>;
-  expenses: Array<{ amount: number }>;
+  expenses: Array<{ amount: number; paidById: number; splits: { userId: number; amount: number }[] }>;
 }
 
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  INR: "₹", USD: "$", EUR: "€", GBP: "£", JPY: "¥", AED: "د.إ",
-};
+// ── AVATAR STACK ──────────────────────────────────────────────────────────────
+function AvatarStack({ members, size = 26 }: { members: Array<{ user: { name: string } }>, size?: number }) {
+  const shown = members.slice(0, 3);
+  const extra = members.length - 3;
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center" }}>
+      {shown.map((m, i) => (
+        <View
+          key={i}
+          style={{
+            width: size, height: size, borderRadius: size / 2,
+            backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length],
+            borderWidth: 1.5, borderColor: "white",
+            alignItems: "center", justifyContent: "center",
+            marginLeft: i === 0 ? 0 : -(size * 0.3),
+            zIndex: shown.length - i,
+          }}
+        >
+          <Text style={{ fontSize: size * 0.42, fontWeight: "700", color: "white" }}>
+            {m.user.name.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+      ))}
+      {extra > 0 && (
+        <View style={{
+          width: size, height: size, borderRadius: size / 2,
+          backgroundColor: PURPLE_LIGHT, borderWidth: 1.5, borderColor: "white",
+          alignItems: "center", justifyContent: "center",
+          marginLeft: -(size * 0.3),
+        }}>
+          <Text style={{ fontSize: size * 0.38, fontWeight: "700", color: PURPLE }}>+{extra}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
 
+// ── GROUP CARD ────────────────────────────────────────────────────────────────
 function GroupCard({
-  item,
-  onPress,
-  r,
-  accentColor,
-  index,
-}: {
-  item: Group;
-  onPress: () => void;
-  r: ReturnType<typeof useResponsive>;
-  accentColor: string;
-  index: number;
-}) {
+  item, onPress, currentUserId,
+}: { item: Group; onPress: () => void; currentUserId: number }) {
   const sym = CURRENCY_SYMBOLS[item.currency || "INR"] || "₹";
-  const total = item.expenses.reduce((s, e) => s + e.amount, 0);
-  const initial = item.name.trim().charAt(0).toUpperCase();
-  const emojiOrInitial = item.emoji || initial;
-  const isEmoji = !!item.emoji;
+  const expenses = item.expenses || [];
+  const totalPaid = expenses.reduce((s, e) => s + (e.paidById === currentUserId ? e.amount : 0), 0);
+  const totalOwes = expenses.reduce((s, e) => {
+    const split = e.splits?.find(sp => sp.userId === currentUserId);
+    return s + (split ? split.amount : 0);
+  }, 0);
+  const balance = totalPaid - totalOwes;
+  const isOwed = balance > 0;
+  const isOwes = balance < 0;
 
   return (
-    <TouchableOpacity
-      style={[
-        styles.card,
-        {
-          padding: r.s(16),
-          borderRadius: r.s(18),
-          marginBottom: r.s(12),
-          borderLeftWidth: r.s(4),
-          borderLeftColor: accentColor,
-        },
-      ]}
-      onPress={onPress}
-      activeOpacity={0.82}
-    >
-      <View style={[
-        styles.cardAvatar,
-        {
-          width: r.s(50), height: r.s(50), borderRadius: r.s(14),
-          backgroundColor: accentColor + "1A", // 10% opacity
-        },
-      ]}>
-        <Text style={{ fontSize: isEmoji ? r.fs(24) : r.fs(20), fontWeight: "800", color: accentColor }}>
-          {emojiOrInitial}
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
+      {/* Icon */}
+      <View style={styles.cardIcon}>
+        <Text style={{ fontSize: item.emoji ? 22 : 18, fontWeight: "700", color: PURPLE }}>
+          {item.emoji || item.name.charAt(0).toUpperCase()}
         </Text>
       </View>
-      <View style={styles.cardBody}>
-        <Text style={[styles.cardName, { fontSize: r.fs(16) }]}>{item.name}</Text>
-        <Text style={[styles.cardSub, { fontSize: r.fs(12) }]}>
-          {item.members.length} member{item.members.length !== 1 ? "s" : ""}
-        </Text>
+
+      {/* Info */}
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={styles.cardName} numberOfLines={1}>{item.name}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
+          <AvatarStack members={item.members} size={22} />
+          <Text style={styles.cardSub}>
+            {item.members.length} member{item.members.length !== 1 ? "s" : ""}
+          </Text>
+        </View>
       </View>
-      <View style={styles.cardRight}>
-        <Text style={[styles.cardTotal, { fontSize: r.fs(15), color: accentColor }]}>{sym}{total.toFixed(0)}</Text>
-        <Text style={[styles.cardTotalLbl, { fontSize: r.fs(10) }]}>total</Text>
+
+      {/* Balance */}
+      <View style={{ alignItems: "flex-end" }}>
+        <Text style={[styles.cardBalance, { color: isOwed ? PURPLE : isOwes ? "#dc2626" : "#94a3b8" }]}>
+          {isOwes ? "-" : "+"}{sym}{Math.abs(balance).toFixed(0)}
+        </Text>
+        <Text style={[styles.cardBalanceLbl, { color: isOwed ? PURPLE : isOwes ? "#dc2626" : "#94a3b8" }]}>
+          {isOwed ? "owed" : isOwes ? "owes" : "settled"}
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -92,216 +115,306 @@ function GroupCard({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
   const { user, logout } = useAuth();
-
-  // Guard: redirect to login if not authenticated
   if (!user) return <Redirect href="/login" />;
+
   const r = useResponsive();
   const insets = useSafeAreaInsets();
+  const currentUserId = user.userId;
 
   const [groupsList, setGroupsList] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <View style={{ flexDirection: "row", gap: r.s(8), marginRight: r.s(4) }}>
-          <TouchableOpacity
-            onPress={() => router.push("/profile")}
-            style={[styles.headerBtn, { width: r.s(36), height: r.s(36), borderRadius: r.s(18) }]}
-          >
-            <Text style={{ fontSize: r.fs(16) }}>👤</Text>
-          </TouchableOpacity>
-        </View>
-      ),
-    });
-  }, [navigation, r.width]);
-
   const fetchGroups = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     try {
       const res = await groups.getAll();
-      setGroupsList(res.data);
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+      setGroupsList(Array.isArray(res.data) ? res.data : []);
+    } catch { /* ignore */ }
+    finally { setLoading(false); setRefreshing(false); }
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchGroups();
-    }, [fetchGroups])
-  );
+  useFocusEffect(useCallback(() => { fetchGroups(); }, [fetchGroups]));
+
+  // Compute totals
+  const youOwe = groupsList.reduce((sum, g) => {
+    const expenses = g.expenses || [];
+    const paid = expenses.reduce((s, e) => s + (e.paidById === currentUserId ? e.amount : 0), 0);
+    const owes = expenses.reduce((s, e) => { const sp = e.splits?.find(x => x.userId === currentUserId); return s + (sp ? sp.amount : 0); }, 0);
+    return sum + Math.max(0, owes - paid);
+  }, 0);
+
+  const owedToYou = groupsList.reduce((sum, g) => {
+    const expenses = g.expenses || [];
+    const paid = expenses.reduce((s, e) => s + (e.paidById === currentUserId ? e.amount : 0), 0);
+    const owes = expenses.reduce((s, e) => { const sp = e.splits?.find(x => x.userId === currentUserId); return s + (sp ? sp.amount : 0); }, 0);
+    return sum + Math.max(0, paid - owes);
+  }, 0);
+
+  const totalBalance = owedToYou - youOwe;
+  const isPositive = totalBalance >= 0;
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={INDIGO} />
+      <View style={{ flex: 1, backgroundColor: BG, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" color={PURPLE} />
       </View>
     );
   }
 
-  const numColumns = r.isTablet ? 2 : 1;
-  const listPadH = r.hPad + r.s(16);
-
-  // Compute total spent across all groups
-  const grandTotal = groupsList.reduce((sum, g) => sum + g.expenses.reduce((s, e) => s + e.amount, 0), 0);
-  const firstName = user?.name?.split(" ")[0] || "there";
-
   return (
-    <View style={styles.root}>
-      {/* Greeting banner */}
-      <View style={[styles.banner, { overflow: "hidden" }]}>
-        {/* Decorative circles */}
-        <View style={[styles.bannerBlob1, { width: r.s(160), height: r.s(160), borderRadius: r.s(80), top: -r.s(40), right: -r.s(30) }]} />
-        <View style={[styles.bannerBlob2, { width: r.s(100), height: r.s(100), borderRadius: r.s(50), bottom: -r.s(20), left: r.s(20) }]} />
-
-        <View style={{ paddingHorizontal: listPadH, paddingTop: r.s(20), paddingBottom: r.s(22) }}>
-          <Text style={[styles.bannerGreet, { fontSize: r.fs(23) }]}>
-            Hey, {firstName} 👋
-          </Text>
-          <Text style={[styles.bannerSub, { fontSize: r.fs(13) }]}>
-            {groupsList.length === 0
-              ? "Create your first group to get started"
-              : `${groupsList.length} group${groupsList.length !== 1 ? "s" : ""} · ₹${grandTotal.toFixed(0)} total tracked`}
-          </Text>
+    <View style={{ flex: 1, backgroundColor: BG }}>
+      {/* ── HEADER ── */}
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <TouchableOpacity
+            onPress={() => router.push("/profile")}
+            style={styles.headerAvatar}
+          >
+            <Text style={{ fontSize: 15, fontWeight: "700", color: "white" }}>
+              {user.name?.charAt(0).toUpperCase() || "?"}
+            </Text>
+          </TouchableOpacity>
+          <Text style={styles.headerBrand}>SplitEase</Text>
+        </View>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <TouchableOpacity
+            onPress={() => router.push("/profile")}
+            style={styles.headerIconBtn}
+          >
+            <Text style={{ fontSize: 16 }}>⚙️</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Section header */}
-      {groupsList.length > 0 && (
-        <View style={{ paddingHorizontal: listPadH, paddingTop: r.s(18), paddingBottom: r.s(4) }}>
-          <Text style={[styles.sectionHeading, { fontSize: r.fs(12) }]}>YOUR GROUPS</Text>
-        </View>
-      )}
-
-      <FlatList
-        data={groupsList}
-        key={numColumns}
-        numColumns={numColumns}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{
-          paddingHorizontal: listPadH,
-          paddingTop: r.s(8),
-          paddingBottom: r.s(100),
-        }}
-        columnWrapperStyle={numColumns > 1 ? { gap: r.s(12) } : undefined}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => { setRefreshing(true); fetchGroups(true); }}
-            tintColor={INDIGO}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchGroups(true); }} tintColor={PURPLE} />
         }
-        ListEmptyComponent={
-          <View style={[styles.empty, { paddingTop: r.s(60) }]}>
-            <View style={[styles.emptyIconWrap, { width: r.s(100), height: r.s(100), borderRadius: r.s(28) }]}>
-              <Text style={{ fontSize: r.fs(48) }}>🤝</Text>
-            </View>
-            <Text style={[styles.emptyTitle, { fontSize: r.fs(20), marginTop: r.s(20) }]}>No groups yet</Text>
-            <Text style={[styles.emptySub, { fontSize: r.fs(14), marginTop: r.s(8), paddingHorizontal: r.s(32) }]}>
-              Tap the + button to create a group and start splitting expenses.
+      >
+        {/* ── BALANCE CARD ── */}
+        {groupsList.length > 0 && (
+          <View style={[styles.balanceCard, { margin: 16 }]}>
+            <Text style={styles.balanceLabel}>Total Balance</Text>
+            <Text style={styles.balanceAmount}>
+              ₹{Math.abs(totalBalance).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
             </Text>
-          </View>
-        }
-        renderItem={({ item, index }) => (
-          <View style={numColumns > 1 ? { flex: 1 } : {}}>
-            <GroupCard
-              item={item}
-              onPress={() => router.push(`/${item.id}`)}
-              r={r}
-              accentColor={CARD_ACCENTS[index % CARD_ACCENTS.length]}
-              index={index}
-            />
+            <Text style={[styles.balanceSubtitle, { color: isPositive ? "#16a34a" : "#dc2626" }]}>
+              {isPositive ? "↑" : "↓"} {isPositive
+                ? `You are owed ₹${owedToYou.toFixed(0)}`
+                : `You owe ₹${youOwe.toFixed(0)}`}
+            </Text>
+
+            <View style={styles.balanceStatsRow}>
+              <View style={styles.balanceStat}>
+                <Text style={styles.balanceStatLabel}>You Owe</Text>
+                <Text style={[styles.balanceStatValue, { color: "#dc2626" }]}>
+                  ₹{youOwe.toFixed(0)}
+                </Text>
+              </View>
+              <View style={[styles.balanceStat, { borderLeftWidth: 1, borderLeftColor: "#EDE9FE" }]}>
+                <Text style={styles.balanceStatLabel}>Owed to You</Text>
+                <Text style={[styles.balanceStatValue, { color: PURPLE }]}>
+                  ₹{owedToYou.toFixed(0)}
+                </Text>
+              </View>
+            </View>
           </View>
         )}
-      />
 
-      {/* FAB */}
-      <TouchableOpacity
-        style={[
-          styles.fab,
-          {
-            bottom: insets.bottom + r.s(24),
-            right: r.hPad + r.s(24),
-            width: r.s(60),
-            height: r.s(60),
-            borderRadius: r.s(30),
-          },
-        ]}
-        onPress={() => router.push("/new-group")}
-        activeOpacity={0.85}
-      >
-        <Text style={[styles.fabText, { fontSize: r.fs(30) }]}>＋</Text>
-      </TouchableOpacity>
+        {/* ── ACTIVE GROUPS ── */}
+        <View style={{ paddingHorizontal: 16 }}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Active Groups</Text>
+            <TouchableOpacity onPress={() => router.push("/new-group")}>
+              <Text style={styles.sectionLink}>VIEW ALL</Text>
+            </TouchableOpacity>
+          </View>
+
+          {groupsList.length === 0 ? (
+            <View style={styles.empty}>
+              <Text style={{ fontSize: 48, marginBottom: 12 }}>🤝</Text>
+              <Text style={styles.emptyTitle}>No groups yet</Text>
+              <Text style={styles.emptySub}>Create a group to start splitting expenses</Text>
+              <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push("/new-group")}>
+                <Text style={styles.emptyBtnText}>+ Create Group</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            groupsList.map(item => (
+              <GroupCard
+                key={item.id}
+                item={item}
+                currentUserId={currentUserId}
+                onPress={() => router.push(`/${item.id}`)}
+              />
+            ))
+          )}
+
+          {/* New group dashed CTA */}
+          {groupsList.length > 0 && (
+            <TouchableOpacity style={styles.newGroupBtn} onPress={() => router.push("/new-group")}>
+              <Text style={{ color: PURPLE, fontWeight: "700", fontSize: 14 }}>+ Create New Group</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
+
+      {/* ── FAB ── */}
+      {groupsList.length > 0 && (
+        <TouchableOpacity
+          style={[styles.fab, { bottom: insets.bottom + 76 }]}
+          onPress={() => router.push("/new-group")}
+          activeOpacity={0.85}
+        >
+          <Text style={{ fontSize: 26, color: "white", fontWeight: "300", lineHeight: 30 }}>＋</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* ── BOTTOM TAB BAR ── */}
+      <View style={[styles.tabBar, { paddingBottom: insets.bottom + 4 }]}>
+        {[
+          { label: "Groups", emoji: "👥", active: true, onPress: undefined },
+          { label: "Friends", emoji: "🤝", active: false, onPress: () => router.push("/friends") },
+          { label: "Activity", emoji: "🔔", active: false, onPress: () => router.push("/activity") },
+          { label: "Account", emoji: "👤", active: false, onPress: () => router.push("/profile") },
+        ].map(tab => (
+          <TouchableOpacity
+            key={tab.label}
+            style={styles.tabItem}
+            onPress={tab.onPress}
+            activeOpacity={0.7}
+          >
+            <Text style={{ fontSize: 20, marginBottom: 2 }}>{tab.emoji}</Text>
+            <Text style={[styles.tabLabel, { color: tab.active ? PURPLE : "#94a3b8", fontWeight: tab.active ? "700" : "500" }]}>
+              {tab.label}
+            </Text>
+            {tab.active && <View style={styles.tabActiveIndicator} />}
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#f1f0ff" },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  banner: {
-    backgroundColor: INDIGO,
+  // Header
+  header: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 16, paddingBottom: 12,
+    backgroundColor: "#F8F5FF",
   },
-  bannerBlob1: { position: "absolute", backgroundColor: "rgba(255,255,255,0.08)" },
-  bannerBlob2: { position: "absolute", backgroundColor: "rgba(255,255,255,0.05)" },
-  bannerGreet: { fontWeight: "800", color: "#fff" },
-  bannerSub: { color: "rgba(255,255,255,0.78)", marginTop: 4, fontWeight: "500" },
-  sectionHeading: {
-    fontWeight: "700",
-    color: "#94a3b8",
-    letterSpacing: 0.8,
+  headerAvatar: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: PURPLE, alignItems: "center", justifyContent: "center",
   },
+  headerBrand: { fontSize: 20, fontWeight: "900", color: PURPLE, letterSpacing: -0.3 },
+  headerIconBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: "white", alignItems: "center", justifyContent: "center",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
+  },
+
+  // Balance Card
+  balanceCard: {
+    backgroundColor: PURPLE_LIGHT, borderRadius: 20, padding: 20,
+  },
+  balanceLabel: {
+    fontSize: 11, fontWeight: "700", color: PURPLE,
+    textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6,
+  },
+  balanceAmount: {
+    fontSize: 38, fontWeight: "900", color: "#1a0533", letterSpacing: -1, marginBottom: 4,
+  },
+  balanceSubtitle: {
+    fontSize: 13, fontWeight: "600", marginBottom: 16,
+  },
+  balanceStatsRow: {
+    flexDirection: "row", backgroundColor: "white", borderRadius: 12, overflow: "hidden",
+  },
+  balanceStat: {
+    flex: 1, paddingVertical: 12, paddingHorizontal: 14,
+  },
+  balanceStatLabel: {
+    fontSize: 10, fontWeight: "600", color: "#94a3b8",
+    textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4,
+  },
+  balanceStatValue: {
+    fontSize: 18, fontWeight: "800",
+  },
+
+  // Section
+  sectionHeader: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    marginBottom: 14,
+  },
+  sectionTitle: { fontSize: 17, fontWeight: "800", color: "#0f172a" },
+  sectionLink: { fontSize: 12, fontWeight: "700", color: PURPLE, letterSpacing: 0.5 },
+
+  // Group Card
   card: {
-    backgroundColor: "#fff",
-    flexDirection: "row",
-    alignItems: "center",
-    shadowColor: "#4f46e5",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    elevation: 3,
+    flexDirection: "row", alignItems: "center", gap: 12,
+    backgroundColor: "white", borderRadius: 16, padding: 14,
+    marginBottom: 10,
+    shadowColor: "#7C3AED", shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
+    borderWidth: 1, borderColor: "#F3F0FF",
   },
-  cardAvatar: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 14,
+  cardIcon: {
+    width: 46, height: 46, borderRadius: 14, backgroundColor: PURPLE_LIGHT,
+    alignItems: "center", justifyContent: "center", flexShrink: 0,
   },
-  cardBody: { flex: 1 },
-  cardName: { fontWeight: "700", color: "#0f172a", marginBottom: 3 },
-  cardSub: { color: "#64748b", fontWeight: "500" },
-  cardRight: { alignItems: "flex-end", gap: 2 },
-  cardTotal: { fontWeight: "800" },
-  cardTotalLbl: { color: "#94a3b8", fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.3 },
-  empty: { alignItems: "center", justifyContent: "center" },
-  emptyIconWrap: {
-    backgroundColor: "#eef2ff",
-    alignItems: "center",
-    justifyContent: "center",
+  cardName: { fontSize: 15, fontWeight: "700", color: "#0f172a" },
+  cardSub: { fontSize: 12, color: "#94a3b8", fontWeight: "500" },
+  cardBalance: { fontSize: 15, fontWeight: "800" },
+  cardBalanceLbl: { fontSize: 10, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.3, marginTop: 1 },
+
+  // New Group CTA
+  newGroupBtn: {
+    alignItems: "center", justifyContent: "center", padding: 14,
+    borderRadius: 16, borderWidth: 2, borderColor: "#DDD6FE",
+    borderStyle: "dashed", marginBottom: 16, backgroundColor: "white",
   },
-  emptyTitle: { fontWeight: "800", color: "#0f172a" },
-  emptySub: { color: "#64748b", textAlign: "center" },
-  headerBtn: {
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
+
+  // Empty state
+  empty: {
+    alignItems: "center", paddingVertical: 48, paddingHorizontal: 32,
   },
+  emptyTitle: { fontSize: 20, fontWeight: "800", color: "#0f172a", marginBottom: 8 },
+  emptySub: { fontSize: 14, color: "#64748b", textAlign: "center", marginBottom: 24, lineHeight: 20 },
+  emptyBtn: {
+    backgroundColor: PURPLE, paddingHorizontal: 24, paddingVertical: 13,
+    borderRadius: 14,
+  },
+  emptyBtnText: { color: "white", fontWeight: "700", fontSize: 15 },
+
+  // FAB
   fab: {
-    position: "absolute",
-    backgroundColor: INDIGO,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: INDIGO,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
-    elevation: 10,
+    position: "absolute", right: 20, width: 56, height: 56, borderRadius: 28,
+    backgroundColor: PURPLE, alignItems: "center", justifyContent: "center",
+    shadowColor: PURPLE, shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45, shadowRadius: 14, elevation: 10,
   },
-  fabText: { color: "#fff", fontWeight: "300", lineHeight: 34 },
+
+  // Bottom Tab Bar
+  tabBar: {
+    flexDirection: "row", backgroundColor: "white",
+    borderTopWidth: 1, borderTopColor: "#F3F0FF",
+    paddingTop: 10,
+    shadowColor: PURPLE, shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08, shadowRadius: 12, elevation: 8,
+  },
+  tabItem: {
+    flex: 1, alignItems: "center", justifyContent: "center",
+    paddingVertical: 4, position: "relative",
+  },
+  tabLabel: { fontSize: 10, letterSpacing: 0.3, textTransform: "uppercase", marginTop: 1 },
+  tabActiveIndicator: {
+    position: "absolute", top: 0, left: "25%", right: "25%",
+    height: 2, backgroundColor: PURPLE, borderBottomLeftRadius: 2, borderBottomRightRadius: 2,
+  },
 });

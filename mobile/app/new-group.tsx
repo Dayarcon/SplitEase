@@ -9,7 +9,9 @@ import { users, groups } from "@/api/client";
 import { useAuth } from "@/context/auth";
 import { useResponsive } from "@/utils/responsive";
 
-const INDIGO = "#4f46e5";
+const PURPLE = "#7C3AED";
+const PURPLE_LIGHT = "#EDE9FE";
+const BG = "#F8F5FF";
 
 const CURRENCIES = [
   { code: "INR", symbol: "₹", label: "Indian Rupee" },
@@ -207,8 +209,8 @@ export default function NewGroupScreen() {
             Members ({members.length + 1})
           </Text>
           <View style={[styles.memberRow, { gap: r.s(12), borderRadius: r.s(12), padding: r.s(12), marginBottom: r.s(8) }]}>
-            <View style={[styles.memberAvatar, { width: r.s(36), height: r.s(36), borderRadius: r.s(10), backgroundColor: "#eef2ff" }]}>
-              <Text style={{ fontSize: r.fs(14), fontWeight: "700", color: INDIGO }}>
+            <View style={[styles.memberAvatar, { width: r.s(36), height: r.s(36), borderRadius: r.s(10), backgroundColor: PURPLE_LIGHT }]}>
+              <Text style={{ fontSize: r.fs(14), fontWeight: "700", color: PURPLE }}>
                 {user?.name?.charAt(0).toUpperCase()}
               </Text>
             </View>
@@ -248,12 +250,12 @@ export default function NewGroupScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#f1f0ff" },
+  root: { flex: 1, backgroundColor: BG },
   label: { fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5 },
   input: { borderWidth: 1.5, borderColor: "#e2e8f0", borderRadius: 12, color: "#0f172a", backgroundColor: "#f8fafc" },
   formCard: {
     backgroundColor: "#fff",
-    shadowColor: "#4f46e5",
+    shadowColor: "#7C3AED",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 10,
@@ -261,16 +263,16 @@ const styles = StyleSheet.create({
   },
   emojiGrid: { flexDirection: "row", flexWrap: "wrap" },
   emojiBtn: { backgroundColor: "#f8f5ff", borderWidth: 2, borderColor: "#e2e8f0", alignItems: "center", justifyContent: "center" },
-  emojiBtnActive: { borderColor: INDIGO, backgroundColor: "#eef2ff" },
-  emojiPreview: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#f5f3ff", borderWidth: 1, borderColor: "#c7d2fe" },
-  emojiPreviewText: { color: "#6366f1", fontWeight: "600" },
+  emojiBtnActive: { borderColor: PURPLE, backgroundColor: PURPLE_LIGHT },
+  emojiPreview: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#EDE9FE", borderWidth: 1, borderColor: "#C4B5FD" },
+  emojiPreviewText: { color: "#7C3AED", fontWeight: "600" },
   currPill: { flexDirection: "row", alignItems: "center", gap: 4, borderWidth: 1.5, borderColor: "#e2e8f0", backgroundColor: "#fff" },
-  currPillActive: { borderColor: INDIGO, backgroundColor: "#eef2ff" },
+  currPillActive: { borderColor: PURPLE, backgroundColor: PURPLE_LIGHT },
   currSymbol: { fontWeight: "700", color: "#0f172a" },
   currCode: { fontWeight: "600", color: "#64748b" },
-  currCodeActive: { color: INDIGO },
+  currCodeActive: { color: PURPLE },
   searchRow: { flexDirection: "row" },
-  searchBtn: { backgroundColor: INDIGO, alignItems: "center", justifyContent: "center" },
+  searchBtn: { backgroundColor: PURPLE, alignItems: "center", justifyContent: "center" },
   searchBtnText: { color: "#fff", fontWeight: "700" },
   searchError: { color: "#e11d48", marginTop: 8, fontWeight: "500" },
   foundCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#f0fdf4", borderWidth: 1, borderColor: "#bbf7d0" },
@@ -284,8 +286,8 @@ const styles = StyleSheet.create({
   memberName: { fontWeight: "700", color: "#0f172a" },
   memberEmail: { color: "#64748b" },
   removeBtn: { backgroundColor: "#fff1f2", alignItems: "center", justifyContent: "center" },
-  bottomBar: { backgroundColor: "#f1f0ff", paddingTop: 16, borderTopWidth: 1, borderColor: "#e2e8f0" },
-  btn: { backgroundColor: INDIGO, alignItems: "center" },
-  btnDisabled: { backgroundColor: "#a5b4fc" },
+  bottomBar: { backgroundColor: BG, paddingTop: 16, borderTopWidth: 1, borderColor: "#e2e8f0" },
+  btn: { backgroundColor: PURPLE, alignItems: "center" },
+  btnDisabled: { backgroundColor: "#C4B5FD" },
   btnText: { color: "#fff", fontWeight: "700" },
 });

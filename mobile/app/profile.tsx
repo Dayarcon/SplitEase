@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform,
+  ScrollView, Alert, ActivityIndicator, Switch,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -9,7 +9,9 @@ import { users } from "@/api/client";
 import { useAuth } from "@/context/auth";
 import { useResponsive } from "@/utils/responsive";
 
-const INDIGO = "#4f46e5";
+const PURPLE = "#7C3AED";
+const PURPLE_LIGHT = "#EDE9FE";
+const BG = "#F8F5FF";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -23,6 +25,7 @@ export default function ProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -30,31 +33,21 @@ export default function ProfileScreen() {
         const res = await users.getProfile();
         setName(res.data.name || user?.name || "");
         setUpiId(res.data.upiId || "");
-      } catch {
-        // fallback
-      } finally {
-        setLoadingProfile(false);
-      }
+      } catch { /* fallback */ }
+      finally { setLoadingProfile(false); }
     })();
   }, []);
 
   const handleSave = async () => {
     if (!name.trim()) { setError("Name cannot be empty"); return; }
-    setError("");
-    setSaving(true);
+    setError(""); setSaving(true);
     try {
-      const res = await users.updateProfile({
-        name: name.trim(),
-        upiId: upiId.trim() || undefined,
-      });
+      const res = await users.updateProfile({ name: name.trim(), upiId: upiId.trim() || undefined });
       updateName(res.data.name);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
-    } catch {
-      setError("Failed to update profile. Try again.");
-    } finally {
-      setSaving(false);
-    }
+    } catch { setError("Failed to update profile."); }
+    finally { setSaving(false); }
   };
 
   const handleLogout = () => {
@@ -65,220 +58,290 @@ export default function ProfileScreen() {
   };
 
   const initial = user?.name?.charAt(0).toUpperCase() || "?";
-  const hPad = r.hPad + r.s(16);
 
   if (loadingProfile) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={INDIGO} /></View>;
+    return <View style={styles.center}><ActivityIndicator size="large" color={PURPLE} /></View>;
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <View style={{ flex: 1, backgroundColor: BG }}>
+      {/* ── HEADER ── */}
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <View style={styles.headerAvatar}>
+            <Text style={{ fontSize: 15, fontWeight: "700", color: "#fff" }}>{initial}</Text>
+          </View>
+          <Text style={styles.headerBrand}>SplitEase</Text>
+        </View>
+        <TouchableOpacity style={styles.headerIconBtn}>
+          <Text style={{ fontSize: 16 }}>⚙️</Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
-        style={styles.root}
-        contentContainerStyle={{ paddingBottom: insets.bottom + r.s(40) }}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 96, paddingHorizontal: 20 }}
+        showsVerticalScrollIndicator={false}
       >
-        {/* Avatar section */}
-        <View style={[styles.avatarSection, { paddingVertical: r.s(36), paddingHorizontal: hPad }]}>
-          <View style={[styles.avatarCircle, { width: r.s(88), height: r.s(88), borderRadius: r.s(44), marginBottom: r.s(14) }]}>
-            <Text style={{ fontSize: r.fs(38), fontWeight: "900", color: "#fff" }}>{initial}</Text>
+        {/* ── PROFILE AVATAR ── */}
+        <View style={{ alignItems: "center", paddingVertical: 24 }}>
+          <View style={styles.bigAvatar}>
+            <Text style={{ fontSize: 44, fontWeight: "900", color: "#fff" }}>{initial}</Text>
           </View>
-          <Text style={{ fontSize: r.fs(22), fontWeight: "800", color: "#fff", marginBottom: r.s(4) }}>{user?.name}</Text>
-          <Text style={{ fontSize: r.fs(14), color: "rgba(255,255,255,0.75)", fontWeight: "500" }}>{user?.email}</Text>
+          <Text style={styles.profileName}>{user?.name}</Text>
+          <Text style={styles.profileEmail}>{user?.email}</Text>
         </View>
 
-        {/* Cards container — centered on tablet */}
-        <View style={{ paddingHorizontal: hPad, paddingTop: r.s(8) }}>
-          {/* Edit profile */}
-          <View style={[styles.card, { borderRadius: r.s(18), padding: r.s(20), marginBottom: r.s(14) }]}>
-            <Text style={[styles.cardTitle, { fontSize: r.fs(11), marginBottom: r.s(16) }]}>Profile</Text>
-
-            {!!error && (
-              <View style={[styles.errorBox, { borderRadius: r.s(10), padding: r.s(10), marginBottom: r.s(12) }]}>
-                <Text style={[styles.errorText, { fontSize: r.fs(13) }]}>{error}</Text>
-              </View>
-            )}
-            {saved && (
-              <View style={[styles.successBox, { borderRadius: r.s(10), padding: r.s(10), marginBottom: r.s(12) }]}>
-                <Text style={[styles.successText, { fontSize: r.fs(13) }]}>✓ Profile updated!</Text>
-              </View>
-            )}
-
-            {/* On tablet: name + upi side by side */}
-            {r.isTablet ? (
-              <View style={{ flexDirection: "row", gap: r.s(16) }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.fieldLabel, { fontSize: r.fs(12), marginBottom: r.s(8) }]}>Display Name</Text>
-                  <TextInput
-                    style={[styles.input, { padding: r.s(14), fontSize: r.fs(15), borderRadius: r.s(12) }]}
-                    value={name}
-                    onChangeText={(t) => { setName(t); setSaved(false); setError(""); }}
-                    placeholder="Your name"
-                    placeholderTextColor="#94a3b8"
-                    returnKeyType="next"
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.fieldLabel, { fontSize: r.fs(12), marginBottom: r.s(8) }]}>
-                    UPI ID <Text style={styles.optional}>(for payments)</Text>
-                  </Text>
-                  <TextInput
-                    style={[styles.input, { padding: r.s(14), fontSize: r.fs(15), borderRadius: r.s(12) }]}
-                    value={upiId}
-                    onChangeText={(t) => { setUpiId(t); setSaved(false); }}
-                    placeholder="yourname@upi or phone@bank"
-                    placeholderTextColor="#94a3b8"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    keyboardType="email-address"
-                    returnKeyType="done"
-                    onSubmitEditing={handleSave}
-                  />
-                </View>
-              </View>
-            ) : (
-              <>
-                <Text style={[styles.fieldLabel, { fontSize: r.fs(12), marginBottom: r.s(8) }]}>Display Name</Text>
-                <TextInput
-                  style={[styles.input, { padding: r.s(14), fontSize: r.fs(15), borderRadius: r.s(12) }]}
-                  value={name}
-                  onChangeText={(t) => { setName(t); setSaved(false); setError(""); }}
-                  placeholder="Your name"
-                  placeholderTextColor="#94a3b8"
-                  returnKeyType="next"
-                />
-
-                <Text style={[styles.fieldLabel, { fontSize: r.fs(12), marginBottom: r.s(8) }]}>
-                  UPI ID <Text style={styles.optional}>(for payments)</Text>
-                </Text>
-                <TextInput
-                  style={[styles.input, { padding: r.s(14), fontSize: r.fs(15), borderRadius: r.s(12) }]}
-                  value={upiId}
-                  onChangeText={(t) => { setUpiId(t); setSaved(false); }}
-                  placeholder="yourname@upi or phone@bank"
-                  placeholderTextColor="#94a3b8"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="email-address"
-                  returnKeyType="done"
-                  onSubmitEditing={handleSave}
-                />
-              </>
-            )}
-
-            {!!upiId && (
-              <View style={[styles.upiHint, { borderRadius: r.s(8), padding: r.s(10), marginBottom: r.s(14) }]}>
-                <Text style={[styles.upiHintText, { fontSize: r.fs(12) }]}>💳 Members can pay you directly via UPI</Text>
-              </View>
-            )}
-
-            <TouchableOpacity
-              style={[styles.btn, { borderRadius: r.s(12), padding: r.s(14) }, saving && styles.btnDisabled]}
-              onPress={handleSave}
-              disabled={saving}
-              activeOpacity={0.85}
-            >
-              {saving ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <Text style={[styles.btnText, { fontSize: r.fs(15) }]}>Save Changes</Text>
-              )}
+        {/* ── PERSONAL DETAILS ── */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionCardHeader}>
+            <Text style={styles.sectionCardTitle}>Personal Details</Text>
+            <TouchableOpacity onPress={handleSave} disabled={saving}>
+              {saving
+                ? <ActivityIndicator size="small" color={PURPLE} />
+                : <Text style={{ fontSize: 13, fontWeight: "700", color: PURPLE }}>Save</Text>}
             </TouchableOpacity>
           </View>
 
-          {/* Account info */}
-          <View style={[styles.card, { borderRadius: r.s(18), padding: r.s(20), marginBottom: r.s(14) }]}>
-            <Text style={[styles.cardTitle, { fontSize: r.fs(11), marginBottom: r.s(16) }]}>Account</Text>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { fontSize: r.fs(14) }]}>Email</Text>
-              <Text style={[styles.infoValue, { fontSize: r.fs(14) }]}>{user?.email}</Text>
+          {!!error && (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{error}</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { fontSize: r.fs(14) }]}>User ID</Text>
-              <Text style={[styles.infoValue, { fontSize: r.fs(14) }]}>#{user?.userId}</Text>
+          )}
+          {saved && (
+            <View style={styles.successBox}>
+              <Text style={styles.successText}>✓ Profile updated!</Text>
             </View>
-            {!!upiId && (
-              <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
-                <Text style={[styles.infoLabel, { fontSize: r.fs(14) }]}>UPI ID</Text>
-                <Text style={[styles.infoValue, { fontSize: r.fs(14), color: INDIGO }]}>{upiId}</Text>
-              </View>
-            )}
-          </View>
+          )}
 
-          {/* About */}
-          <View style={[styles.card, { borderRadius: r.s(18), padding: r.s(20), marginBottom: r.s(14) }]}>
-            <Text style={[styles.cardTitle, { fontSize: r.fs(11), marginBottom: r.s(16) }]}>About</Text>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { fontSize: r.fs(14) }]}>App</Text>
-              <Text style={[styles.infoValue, { fontSize: r.fs(14) }]}>Splitwise</Text>
-            </View>
-            <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
-              <Text style={[styles.infoLabel, { fontSize: r.fs(14) }]}>Version</Text>
-              <Text style={[styles.infoValue, { fontSize: r.fs(14) }]}>1.0.0</Text>
-            </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>FULL NAME</Text>
+            <TextInput
+              style={styles.detailInput}
+              value={name}
+              onChangeText={(t) => { setName(t); setSaved(false); setError(""); }}
+              placeholder="Your name"
+              placeholderTextColor="#94a3b8"
+              returnKeyType="next"
+            />
           </View>
-
-          {/* Sign out */}
-          <View style={[styles.card, { borderRadius: r.s(18), padding: r.s(20), marginBottom: r.s(8) }]}>
-            <TouchableOpacity
-              style={[styles.logoutBtn, { borderRadius: r.s(12), padding: r.s(14) }]}
-              onPress={handleLogout}
-              activeOpacity={0.85}
-            >
-              <Text style={[styles.logoutText, { fontSize: r.fs(15) }]}>Sign Out</Text>
-            </TouchableOpacity>
+          <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
+            <Text style={styles.detailLabel}>PHONE NUMBER</Text>
+            <TextInput
+              style={styles.detailInput}
+              value={upiId}
+              onChangeText={(t) => { setUpiId(t); setSaved(false); }}
+              placeholder="+1 (555) 0000 0000"
+              placeholderTextColor="#94a3b8"
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
           </View>
         </View>
+
+        {/* ── CURRENCY ── */}
+        <TouchableOpacity style={styles.currencyCard} activeOpacity={0.85}>
+          <View style={styles.currencyCardTop}>
+            <View style={styles.currencyIcon}>
+              <Text style={{ fontSize: 18 }}>💳</Text>
+            </View>
+            <View style={styles.defaultBadge}>
+              <Text style={styles.defaultBadgeText}>DEFAULT</Text>
+            </View>
+          </View>
+          <Text style={styles.currencyTitle}>Currency</Text>
+          <Text style={styles.currencySubtitle}>Preferred display currency</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Text style={styles.currencyValue}>INR</Text>
+            <Text style={{ fontSize: 18, color: "rgba(255,255,255,0.7)" }}>⇄</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* ── LANGUAGE ── */}
+        <View style={styles.sectionCard}>
+          <TouchableOpacity style={[styles.settingRow, { borderBottomWidth: 0 }]}>
+            <View style={styles.settingIconWrap}>
+              <Text style={{ fontSize: 18 }}>🌐</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingTitle}>Language</Text>
+              <Text style={styles.settingSubtitle}>English (US)</Text>
+            </View>
+            <Text style={{ color: "#94a3b8", fontSize: 18 }}>›</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ── SECURITY & PRIVACY ── */}
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionCardTitle}>Security &amp; Privacy</Text>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingIconWrap}>
+              <Text style={{ fontSize: 18 }}>🔐</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingTitle}>Two-Factor Auth</Text>
+              <Text style={styles.settingSubtitle}>
+                {twoFAEnabled ? "Enabled via SMS" : "Disabled"}
+              </Text>
+            </View>
+            <Switch
+              value={twoFAEnabled}
+              onValueChange={setTwoFAEnabled}
+              trackColor={{ false: "#e2e8f0", true: PURPLE }}
+              thumbColor="#fff"
+            />
+          </View>
+
+          <TouchableOpacity style={[styles.settingRow, { borderBottomWidth: 0 }]}
+            onPress={() => router.push("/forgot-password")}>
+            <View style={styles.settingIconWrap}>
+              <Text style={{ fontSize: 18 }}>👤</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingTitle}>Change Password</Text>
+              <Text style={styles.settingSubtitle}>Send reset link to email</Text>
+            </View>
+            <Text style={{ color: "#94a3b8", fontSize: 18 }}>›</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ── LOG OUT ── */}
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
+          <Text style={styles.logoutBtnText}>Log Out of All Devices</Text>
+        </TouchableOpacity>
+
+        {/* ── DELETE ACCOUNT ── */}
+        <TouchableOpacity style={{ alignItems: "center", marginTop: 14 }}>
+          <Text style={{ fontSize: 14, color: "#e11d48", fontWeight: "600" }}>🗑️ Delete Account</Text>
+        </TouchableOpacity>
+
+        {/* ── VERSION ── */}
+        <Text style={styles.version}>SPLITEASE V1.0.0 • BUILD 100</Text>
       </ScrollView>
-    </KeyboardAvoidingView>
+
+      {/* ── BOTTOM NAV ── */}
+      <View style={[styles.tabBar, { paddingBottom: insets.bottom + 4 }]}>
+        {[
+          { label: "GROUPS", emoji: "👥", active: false, route: "/" },
+          { label: "FRIENDS", emoji: "🤝", active: false, route: "/friends" },
+          { label: "ACTIVITY", emoji: "🔔", active: false, route: "/activity" },
+          { label: "ACCOUNT", emoji: "👤", active: true, route: "/profile" },
+        ].map((tab) => (
+          <TouchableOpacity
+            key={tab.label}
+            style={styles.tabItem}
+            onPress={() => { if (!tab.active) router.push(tab.route as any); }}
+            activeOpacity={0.7}
+          >
+            <Text style={{ fontSize: 20, marginBottom: 2 }}>{tab.emoji}</Text>
+            <Text style={[styles.tabLabel, { color: tab.active ? PURPLE : "#94a3b8", fontWeight: tab.active ? "700" : "500" }]}>
+              {tab.label}
+            </Text>
+            {tab.active && <View style={styles.tabActiveBar} />}
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#f1f0ff" },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  avatarSection: {
-    alignItems: "center",
-    backgroundColor: INDIGO,
+  center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: BG },
+
+  header: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 16, paddingBottom: 12, backgroundColor: BG,
   },
-  avatarCircle: {
-    backgroundColor: "rgba(255,255,255,0.25)",
+  headerAvatar: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: PURPLE, alignItems: "center", justifyContent: "center",
+  },
+  headerBrand: { fontSize: 20, fontWeight: "900", color: PURPLE, letterSpacing: -0.3 },
+  headerIconBtn: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: "#fff",
     alignItems: "center", justifyContent: "center",
-    borderWidth: 3, borderColor: "rgba(255,255,255,0.4)",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
   },
-  card: {
-    backgroundColor: "#fff",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
+
+  bigAvatar: {
+    width: 100, height: 100, borderRadius: 28, backgroundColor: PURPLE,
+    alignItems: "center", justifyContent: "center", marginBottom: 14,
+    shadowColor: PURPLE, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 14, elevation: 8,
   },
-  cardTitle: {
-    fontWeight: "700", color: "#94a3b8",
-    textTransform: "uppercase", letterSpacing: 0.5,
+  profileName: { fontSize: 22, fontWeight: "800", color: "#0f172a", marginBottom: 4 },
+  profileEmail: { fontSize: 14, color: "#64748b", fontWeight: "500" },
+
+  sectionCard: {
+    backgroundColor: "#fff", borderRadius: 18, padding: 16, marginBottom: 14,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
-  fieldLabel: { fontWeight: "600", color: "#475569" },
-  optional: { fontWeight: "400", color: "#94a3b8" },
-  errorBox: { backgroundColor: "#fff1f2", borderWidth: 1, borderColor: "#fecdd3" },
-  errorText: { color: "#e11d48", fontWeight: "600" },
-  successBox: { backgroundColor: "#f0fdf4", borderWidth: 1, borderColor: "#bbf7d0" },
-  successText: { color: "#16a34a", fontWeight: "600" },
-  input: {
-    borderWidth: 1.5, borderColor: "#e2e8f0",
-    color: "#0f172a", backgroundColor: "#f8fafc",
-    marginBottom: 14,
+  sectionCardHeader: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14,
   },
-  upiHint: { backgroundColor: "#fef9c3", borderWidth: 1, borderColor: "#fde047" },
-  upiHintText: { color: "#854d0e", fontWeight: "600" },
-  btn: { backgroundColor: INDIGO, alignItems: "center" },
-  btnDisabled: { backgroundColor: "#a5b4fc" },
-  btnText: { color: "#fff", fontWeight: "700" },
-  infoRow: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#f1f5f9",
+  sectionCardTitle: { fontSize: 15, fontWeight: "700", color: "#0f172a" },
+
+  detailRow: {
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F3F0FF",
   },
-  infoLabel: { color: "#64748b", fontWeight: "500" },
-  infoValue: { color: "#0f172a", fontWeight: "600", maxWidth: "60%", textAlign: "right" },
+  detailLabel: {
+    fontSize: 10, fontWeight: "700", color: "#94a3b8",
+    textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4,
+  },
+  detailInput: { fontSize: 15, fontWeight: "500", color: "#0f172a", padding: 0 },
+
+  errorBox: { backgroundColor: "#fff1f2", borderRadius: 10, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#fecdd3" },
+  errorText: { color: "#e11d48", fontWeight: "600", fontSize: 13 },
+  successBox: { backgroundColor: "#f0fdf4", borderRadius: 10, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#bbf7d0" },
+  successText: { color: "#16a34a", fontWeight: "600", fontSize: 13 },
+
+  currencyCard: {
+    backgroundColor: PURPLE, borderRadius: 18, padding: 18, marginBottom: 14,
+  },
+  currencyCardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
+  currencyIcon: {
+    width: 40, height: 40, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center", justifyContent: "center",
+  },
+  defaultBadge: {
+    backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4,
+  },
+  defaultBadgeText: { fontSize: 10, fontWeight: "700", color: "#fff", letterSpacing: 0.5 },
+  currencyTitle: { fontSize: 16, fontWeight: "700", color: "#fff", marginBottom: 2 },
+  currencySubtitle: { fontSize: 12, color: "rgba(255,255,255,0.7)", marginBottom: 8 },
+  currencyValue: { fontSize: 26, fontWeight: "900", color: "#fff" },
+
+  settingRow: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F3F0FF",
+  },
+  settingIconWrap: {
+    width: 38, height: 38, borderRadius: 11, backgroundColor: PURPLE_LIGHT,
+    alignItems: "center", justifyContent: "center",
+  },
+  settingTitle: { fontSize: 15, fontWeight: "600", color: "#0f172a" },
+  settingSubtitle: { fontSize: 12, color: "#94a3b8", marginTop: 1 },
+
   logoutBtn: {
-    backgroundColor: "#fff1f2", alignItems: "center",
-    borderWidth: 1, borderColor: "#fecdd3",
+    backgroundColor: PURPLE, borderRadius: 14, padding: 16,
+    alignItems: "center", marginTop: 4,
   },
-  logoutText: { color: "#e11d48", fontWeight: "700" },
+  logoutBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+
+  version: {
+    textAlign: "center", fontSize: 11, color: "#94a3b8",
+    fontWeight: "500", marginTop: 20, letterSpacing: 0.5,
+  },
+
+  tabBar: {
+    flexDirection: "row", backgroundColor: "#fff",
+    borderTopWidth: 1, borderTopColor: "#F3F0FF",
+    paddingTop: 10,
+  },
+  tabItem: { flex: 1, alignItems: "center", justifyContent: "center", position: "relative" },
+  tabLabel: { fontSize: 10, letterSpacing: 0.3 },
+  tabActiveBar: {
+    position: "absolute", top: -10, left: "25%", right: "25%",
+    height: 3, backgroundColor: PURPLE, borderRadius: 2,
+  },
 });

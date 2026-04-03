@@ -12,7 +12,9 @@ import {
 import { useAuth } from "@/context/auth";
 import { useResponsive } from "@/utils/responsive";
 
-const INDIGO = "#4f46e5";
+const PURPLE = "#7C3AED"
+const PURPLE_LIGHT = "#EDE9FE"
+const BG = "#F8F5FF";
 const GREEN = "#16a34a";
 const RED = "#e11d48";
 
@@ -108,25 +110,7 @@ export default function GroupDetail() {
 
   useFocusEffect(useCallback(() => { fetchData(); }, [fetchData]));
 
-  useLayoutEffect(() => {
-    if (group) {
-      navigation.setOptions({
-        title: `${group.emoji || "💰"} ${group.name}`,
-        headerRight: () => (
-          <View style={{ flexDirection: "row", gap: r.s(8), marginRight: r.s(4) }}>
-            <TouchableOpacity onPress={handleExport} style={[styles.headerBtn, { paddingHorizontal: r.s(10), paddingVertical: r.s(6) }]}>
-              <Text style={{ color: "#fff", fontSize: r.fs(12), fontWeight: "700" }}>Export</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push(`/${groupId}/add-expense`)}
-              style={[styles.headerBtnPrimary, { paddingHorizontal: r.s(12), paddingVertical: r.s(6) }]}>
-              <Text style={{ color: "#fff", fontWeight: "700", fontSize: r.fs(14) }}>+ Add</Text>
-            </TouchableOpacity>
-          </View>
-        ),
-      });
-    }
-  }, [group, navigation, r.width]);
+  // Header handled by custom UI below (headerShown: false)
 
   const handleExport = async () => {
     try {
@@ -189,7 +173,7 @@ export default function GroupDetail() {
     });
   };
 
-  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={INDIGO} /></View>;
+  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={PURPLE} /></View>;
   if (!group) return <View style={styles.center}><Text>Group not found</Text></View>;
 
   const sym = CURRENCY_SYMBOLS[group.currency || "INR"] || "₹";
@@ -324,7 +308,7 @@ export default function GroupDetail() {
         return (
           <View key={m.userId} style={[styles.memberRow, { borderRadius: r.s(12), padding: r.s(12), marginBottom: r.s(8) }]}>
             <View style={[styles.memberAvatar, { width: r.s(38), height: r.s(38), borderRadius: r.s(12), marginRight: r.s(12) }]}>
-              <Text style={{ fontWeight: "700", fontSize: r.fs(14), color: INDIGO }}>{m.user.name.charAt(0).toUpperCase()}</Text>
+              <Text style={{ fontWeight: "700", fontSize: r.fs(14), color: PURPLE }}>{m.user.name.charAt(0).toUpperCase()}</Text>
             </View>
             <Text style={[styles.memberName, { fontSize: r.fs(14) }]}>{m.user.name}</Text>
             {m.user.upiId && <Text style={[styles.upiChip, { fontSize: r.fs(10) }]}>UPI</Text>}
@@ -386,7 +370,7 @@ export default function GroupDetail() {
           const myShare = e.splits.find((s) => s.userId === currentUserId)?.amount || 0;
           const iPaid = e.paidBy.id === currentUserId;
           const emoji = CATEGORY_EMOJIS[e.category || "other"] || "💡";
-          const catColor = CATEGORY_COLORS[e.category || "other"] || INDIGO;
+          const catColor = CATEGORY_COLORS[e.category || "other"] || PURPLE;
           return (
             <View key={e.id} style={[styles.expCard, { borderRadius: r.s(14), padding: r.s(12), marginBottom: r.s(10), borderLeftWidth: r.s(4), borderLeftColor: catColor }]}>
               <View style={[styles.expEmoji, { width: r.s(44), height: r.s(44), borderRadius: r.s(12), marginRight: r.s(12), backgroundColor: catColor + "18" }]}>
@@ -442,7 +426,7 @@ export default function GroupDetail() {
       ) : (
         activityItems.map((item, i) => (
           <View key={i} style={[styles.actItem, { marginBottom: r.s(16), gap: r.s(12) }]}>
-            <View style={[styles.actDot, { width: r.s(12), height: r.s(12), borderRadius: r.s(6), marginTop: r.s(4), backgroundColor: item.type === "expense" ? INDIGO : GREEN }]} />
+            <View style={[styles.actDot, { width: r.s(12), height: r.s(12), borderRadius: r.s(6), marginTop: r.s(4), backgroundColor: item.type === "expense" ? PURPLE : GREEN }]} />
             <View style={[styles.actContent, { paddingLeft: r.s(12), paddingBottom: r.s(8) }]}>
               {item.type === "expense" ? (
                 <>
@@ -468,7 +452,7 @@ export default function GroupDetail() {
   );
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: BG }]}>
       {!!toast && (
         <View style={[styles.toast, { top: r.s(16), left: r.s(20), right: r.s(20), borderRadius: r.s(12), padding: r.s(14) }]}>
           <Text style={[styles.toastText, { fontSize: r.fs(14) }]}>{toast}</Text>
@@ -479,31 +463,86 @@ export default function GroupDetail() {
         contentContainerStyle={{ paddingBottom: insets.bottom + r.s(100) }}
         refreshControl={
           <RefreshControl refreshing={refreshing}
-            onRefresh={() => { setRefreshing(true); fetchData(true); }} tintColor={INDIGO} />
+            onRefresh={() => { setRefreshing(true); fetchData(true); }} tintColor={PURPLE} />
         }
       >
-        {/* Summary Banner */}
-        <View style={[styles.banner, { overflow: "hidden" }]}>
-          <View style={[styles.bannerBlob1, { width: r.s(180), height: r.s(180), borderRadius: r.s(90), top: -r.s(50), right: -r.s(40) }]} />
-          <View style={[styles.bannerBlob2, { width: r.s(120), height: r.s(120), borderRadius: r.s(60), bottom: -r.s(30), left: r.s(30) }]} />
-          <View style={{ paddingHorizontal: hPad, paddingTop: r.s(18), paddingBottom: r.s(22) }}>
-            <View style={styles.statsRow}>
-              <View style={styles.stat}>
-                <Text style={[styles.statVal, { fontSize: r.fs(r.isTablet ? 24 : 20) }]}>{sym}{totalExpenses.toFixed(0)}</Text>
-                <Text style={[styles.statLbl, { fontSize: r.fs(11) }]}>Total Spent</Text>
-              </View>
-              <View style={[styles.stat, styles.statMiddle]}>
-                <Text style={[styles.statVal, { fontSize: r.fs(r.isTablet ? 24 : 20) }]}>{group.members.length}</Text>
-                <Text style={[styles.statLbl, { fontSize: r.fs(11) }]}>Members</Text>
-              </View>
-              <View style={styles.stat}>
-                <Text style={[styles.statVal, { fontSize: r.fs(r.isTablet ? 24 : 20), color: myBalance >= 0 ? "#86efac" : "#fca5a5" }]}>
-                  {myBalance >= 0 ? "+" : ""}{sym}{Math.abs(myBalance).toFixed(0)}
-                </Text>
-                <Text style={[styles.statLbl, { fontSize: r.fs(11) }]}>Your Balance</Text>
-              </View>
-            </View>
+        {/* ── CUSTOM HEADER ── */}
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingTop: insets.top + 12, paddingBottom: 12, backgroundColor: BG }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <TouchableOpacity onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "white", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 }}>
+              <Text style={{ fontSize: 18, color: PURPLE }}>←</Text>
+            </TouchableOpacity>
+            <Text style={{ fontSize: 20, fontWeight: "900", color: PURPLE, letterSpacing: -0.3 }}>SplitEase</Text>
           </View>
+          <TouchableOpacity onPress={() => router.push(`/${groupId}/add-expense`)} style={{ paddingHorizontal: 14, paddingVertical: 8, backgroundColor: PURPLE, borderRadius: 20 }}>
+            <Text style={{ color: "white", fontWeight: "700", fontSize: 14 }}>+ Add</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ── GROUP BALANCE CARD ── */}
+        <View style={{ backgroundColor: "#EDE9FE", borderRadius: 20, margin: 16, padding: 20 }}>
+          <Text style={{ fontSize: 11, fontWeight: "700", color: PURPLE, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 2 }}>
+            {group.emoji ? `${group.emoji} ` : ""}{group.name}
+          </Text>
+          <Text style={{ fontSize: 12, color: "#8B5CF6", marginBottom: 10 }}>
+            {group.members.length} members · {group.expenses.length} expenses
+          </Text>
+          <Text style={{ fontSize: 11, fontWeight: "700", color: PURPLE, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 4 }}>Current Balance</Text>
+          <Text style={{ fontSize: 36, fontWeight: "900", color: "#1a0533", letterSpacing: -1, marginBottom: 4 }}>
+            {sym}{Math.abs(myBalance).toFixed(0)}
+          </Text>
+          {myBalance !== 0 && (
+            <Text style={{ fontSize: 13, fontWeight: "600", color: myBalance > 0 ? "#16a34a" : "#dc2626", marginBottom: 14 }}>
+              {myBalance > 0 ? "↑ You are owed money" : "↓ You owe money"}
+            </Text>
+          )}
+          {/* Member avatar stack */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 }}>
+            <View style={{ flexDirection: "row" }}>
+              {group.members.slice(0, 4).map((m, i) => (
+                <View key={m.userId} style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: [PURPLE, "#A78BFA", "#6D28D9", "#8B5CF6"][i % 4], borderWidth: 1.5, borderColor: "#EDE9FE", alignItems: "center", justifyContent: "center", marginLeft: i === 0 ? 0 : -8, zIndex: 4 - i }}>
+                  <Text style={{ fontSize: 11, fontWeight: "700", color: "white" }}>{m.user.name.charAt(0).toUpperCase()}</Text>
+                </View>
+              ))}
+              {group.members.length > 4 && (
+                <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: "white", borderWidth: 1.5, borderColor: "#EDE9FE", alignItems: "center", justifyContent: "center", marginLeft: -8 }}>
+                  <Text style={{ fontSize: 10, fontWeight: "700", color: PURPLE }}>+{group.members.length - 4}</Text>
+                </View>
+              )}
+            </View>
+            <Text style={{ fontSize: 12, color: "#8B5CF6" }}>{group.members.length} members</Text>
+          </View>
+          {/* Action buttons */}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            {txns.length > 0 && (
+              <TouchableOpacity
+                style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: PURPLE, paddingVertical: 12, borderRadius: 12 }}
+                onPress={() => setSettleModal(txns[0])}
+              >
+                <Text style={{ color: "white", fontWeight: "700", fontSize: 14 }}>✓ Settle Up</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "white", paddingVertical: 12, borderRadius: 12 }}
+              onPress={() => router.push(`/${groupId}/add-expense`)}
+            >
+              <Text style={{ color: PURPLE, fontWeight: "700", fontSize: 14 }}>+ Add Expense</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* ── STATS ROW ── */}
+        <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16, marginBottom: 16 }}>
+          {[
+            { label: "Spent", value: `${sym}${totalExpenses.toFixed(0)}`, color: "#0f172a" },
+            { label: "Members", value: `${group.members.length}`, color: PURPLE },
+            { label: "Expenses", value: `${group.expenses.length}`, color: "#16a34a" },
+          ].map(stat => (
+            <View key={stat.label} style={{ flex: 1, backgroundColor: "white", borderRadius: 14, padding: 12, alignItems: "center", shadowColor: PURPLE, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 }}>
+              <Text style={{ fontSize: 10, fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{stat.label}</Text>
+              <Text style={{ fontSize: 16, fontWeight: "900", color: stat.color }}>{stat.value}</Text>
+            </View>
+          ))}
         </View>
 
         {/* Category Chart */}
@@ -521,7 +560,7 @@ export default function GroupDetail() {
                     <View style={[styles.chartBar, {
                       height: r.s(10), borderRadius: r.s(5),
                       width: `${Math.round((amt / maxCatAmt) * 100)}%` as any,
-                      backgroundColor: CATEGORY_COLORS[cat] || INDIGO,
+                      backgroundColor: CATEGORY_COLORS[cat] || PURPLE,
                     }]} />
                   </View>
                   <Text style={[styles.chartCatLabel, { fontSize: r.fs(10) }]}>{CATEGORY_LABELS[cat] || cat}</Text>
@@ -619,7 +658,7 @@ export default function GroupDetail() {
                     onPress={() => setSettleModal(null)}>
                     <Text style={[styles.modalBtnText, { fontSize: r.fs(15), color: "#475569" }]}>Cancel</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.modalBtn, { paddingVertical: r.s(14), borderRadius: r.s(14), backgroundColor: INDIGO }]}
+                  <TouchableOpacity style={[styles.modalBtn, { paddingVertical: r.s(14), borderRadius: r.s(14), backgroundColor: PURPLE }]}
                     onPress={handleSettle} disabled={settling}>
                     {settling ? <ActivityIndicator color="#fff" size="small" />
                       : <Text style={[styles.modalBtnText, { fontSize: r.fs(15), color: "#fff" }]}>Confirm</Text>}
@@ -639,7 +678,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   toast: { position: "absolute", zIndex: 100, backgroundColor: "#0f172a", alignItems: "center" },
   toastText: { color: "#fff", fontWeight: "600" },
-  banner: { backgroundColor: INDIGO },
+  banner: { backgroundColor: PURPLE },
   bannerBlob1: { position: "absolute", backgroundColor: "rgba(255,255,255,0.08)" },
   bannerBlob2: { position: "absolute", backgroundColor: "rgba(255,255,255,0.05)" },
   statsRow: { flexDirection: "row" },
@@ -654,9 +693,9 @@ const styles = StyleSheet.create({
   chartBar: {},
   chartCatLabel: { color: "#94a3b8", fontWeight: "500", marginTop: 2 },
   chartAmt: { fontWeight: "700", color: "#475569", textAlign: "right" },
-  tabRow: { flexDirection: "row", backgroundColor: "#ebe9ff", gap: 4, shadowColor: "#4f46e5", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 3 },
+  tabRow: { flexDirection: "row", backgroundColor: "#EDE9FE", gap: 4, shadowColor: PURPLE, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 3 },
   tab: { flex: 1, alignItems: "center" },
-  tabActive: { backgroundColor: INDIGO },
+  tabActive: { backgroundColor: PURPLE },
   tabText: { fontWeight: "700", color: "#6366f1" },
   tabTextActive: { color: "#fff" },
   sectionLabel: { fontWeight: "700", color: "#94a3b8", letterSpacing: 0.8, marginTop: 20, marginBottom: 10 },
@@ -664,27 +703,27 @@ const styles = StyleSheet.create({
   emptyTitle: { fontWeight: "700", color: "#0f172a" },
   emptySub: { color: "#64748b", marginTop: 4, textAlign: "center" },
   txnCard: { backgroundColor: "#fff", borderWidth: 1, borderColor: "#e2e8f0", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
-  txnCardMine: { borderColor: "#c7d2fe", backgroundColor: "#eef2ff" },
+  txnCardMine: { borderColor: "#C4B5FD", backgroundColor: PURPLE_LIGHT },
   txnRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
   txnAvatar: { backgroundColor: "#fee2e2", alignItems: "center", justifyContent: "center" },
   txnMiddle: { flex: 1, alignItems: "center", paddingHorizontal: 8 },
   txnFrom: { fontWeight: "700", color: "#0f172a" },
-  txnArrow: { color: INDIGO, fontWeight: "600", marginVertical: 2 },
+  txnArrow: { color: PURPLE, fontWeight: "600", marginVertical: 2 },
   txnTo: { fontWeight: "700", color: "#0f172a" },
   txnBtns: { marginTop: 12 },
-  payBtn: { borderWidth: 1, borderColor: "#c7d2fe", alignItems: "center", backgroundColor: "#eef2ff" },
-  payBtnText: { fontWeight: "700", color: INDIGO },
+  payBtn: { borderWidth: 1, borderColor: "#C4B5FD", alignItems: "center", backgroundColor: PURPLE_LIGHT },
+  payBtnText: { fontWeight: "700", color: PURPLE },
   memberRow: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3, elevation: 1 },
-  memberAvatar: { backgroundColor: "#eef2ff", alignItems: "center", justifyContent: "center" },
+  memberAvatar: { backgroundColor: PURPLE_LIGHT, alignItems: "center", justifyContent: "center" },
   memberName: { flex: 1, fontWeight: "600", color: "#0f172a" },
   upiChip: { fontWeight: "700", color: "#854d0e", backgroundColor: "#fef9c3", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginRight: 8 },
   memberBal: { fontWeight: "800" },
   searchWrap: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderWidth: 1.5, borderColor: "#e2e8f0" },
   searchInput: { flex: 1, color: "#0f172a" },
   filterChip: { flexDirection: "row", alignItems: "center", gap: 4, borderWidth: 1.5, borderColor: "#e2e8f0", backgroundColor: "#fff" },
-  filterChipActive: { borderColor: INDIGO, backgroundColor: "#eef2ff" },
+  filterChipActive: { borderColor: PURPLE, backgroundColor: PURPLE_LIGHT },
   filterChipText: { fontWeight: "600", color: "#64748b" },
-  filterChipTextActive: { color: INDIGO },
+  filterChipTextActive: { color: PURPLE },
   expCard: { backgroundColor: "#fff", flexDirection: "row", alignItems: "flex-start", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2, borderWidth: 1, borderColor: "#f1f5f9" },
   expEmoji: { alignItems: "center", justifyContent: "center" },
   expBody: { flex: 1 },
@@ -703,7 +742,7 @@ const styles = StyleSheet.create({
   actTitle: { fontWeight: "700", color: "#0f172a" },
   actSub: { color: "#475569", marginTop: 2 },
   actDate: { color: "#94a3b8", marginTop: 4 },
-  fab: { position: "absolute", backgroundColor: INDIGO, alignItems: "center", justifyContent: "center", shadowColor: INDIGO, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8 },
+  fab: { position: "absolute", backgroundColor: PURPLE, alignItems: "center", justifyContent: "center", shadowColor: PURPLE, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end", padding: 16 },
   modalCard: { backgroundColor: "#fff" },
   modalTitle: { fontWeight: "800", color: "#0f172a" },

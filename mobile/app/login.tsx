@@ -15,7 +15,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/auth";
 import { useResponsive } from "@/utils/responsive";
 
-const INDIGO = "#4f46e5";
+const PURPLE = "#7C3AED";
+const PURPLE_LIGHT = "#EDE9FE";
+const BG = "#F8F5FF";
 
 export default function LoginScreen() {
   const { login, isLoading, user } = useAuth();
@@ -166,7 +168,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: INDIGO,
+    backgroundColor: PURPLE,
     overflow: "hidden",
   },
   blob1: { position: "absolute", backgroundColor: "rgba(255,255,255,0.09)" },
@@ -213,7 +215,7 @@ const styles = StyleSheet.create({
   },
   cardAccent: {
     height: 4,
-    backgroundColor: INDIGO,
+    backgroundColor: PURPLE,
     marginBottom: 20,
     width: 48,
   },
@@ -245,20 +247,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8fafc",
   },
   inputFocused: {
-    borderColor: INDIGO,
-    backgroundColor: "#f5f3ff",
+    borderColor: PURPLE,
+    backgroundColor: "#EDE9FE",
   },
   btn: {
-    backgroundColor: INDIGO,
+    backgroundColor: PURPLE,
     alignItems: "center",
-    shadowColor: INDIGO,
+    shadowColor: PURPLE,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
   btnDisabled: {
-    backgroundColor: "#a5b4fc",
+    backgroundColor: "#C4B5FD",
     shadowOpacity: 0,
     elevation: 0,
   },
@@ -292,7 +294,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   forgotLink: {
-    color: INDIGO,
+    color: PURPLE,
     fontWeight: "600",
   },
 });

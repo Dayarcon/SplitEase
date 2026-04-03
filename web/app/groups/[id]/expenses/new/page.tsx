@@ -38,7 +38,7 @@ const detectCategory = (desc: string): string => {
 };
 
 const AVATAR_COLORS = [
-  { background: '#e0e7ff', color: '#4338ca', borderColor: '#c7d2fe' },
+  { background: '#e0e7ff', color: '#7C3AED', borderColor: '#C4B5FD' },
   { background: '#ffe4e6', color: '#be123c', borderColor: '#fecdd3' },
   { background: '#d1fae5', color: '#065f46', borderColor: '#a7f3d0' },
   { background: '#fef3c7', color: '#92400e', borderColor: '#fde68a' },
@@ -240,65 +240,70 @@ export default function NewExpenseWizard() {
 
   if (loadingMembers) {
     return (
-      <div className="app-page flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p style={{ color: '#6366f1', fontWeight: 600 }}>Loading...</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#F8F5FF" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ width: 44, height: 44, border: "4px solid #EDE9FE", borderTopColor: "#7C3AED", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+          <p style={{ color: "#7C3AED", fontWeight: 600, fontSize: 15 }}>Loading...</p>
         </div>
       </div>
     );
   }
 
   const TopBar = ({ title, showBackToGroups = false }: { title: string; showBackToGroups?: boolean }) => (
-    <div className="summary-card" style={{ borderRadius: '0 0 24px 24px', paddingBottom: 24, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ background: "white", borderBottom: "1px solid #F3F0FF", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 1px 4px rgba(124,58,237,0.06)" }}>
       <button
         onClick={() => {
           if (showBackToGroups) router.push(`/groups/${groupId}`);
           else setStep(prev => prev - 1);
         }}
-        style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', padding: 8, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        style={{ width: 36, height: 36, borderRadius: "50%", background: "#F3F0FF", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
       >
-        <ArrowLeft style={{ width: 24, height: 24, color: 'white' }} />
+        <X style={{ width: 18, height: 18, color: "#7C3AED" }} />
       </button>
-      <h1 style={{ fontWeight: 900, fontSize: 22, color: 'white', margin: 0, paddingTop: 8 }}>{title}</h1>
+      <h1 style={{ fontWeight: 900, fontSize: 18, color: "#0f172a", margin: 0 }}>{title}</h1>
+      <button
+        onClick={step === 3 ? createExpense : (step === 2 ? goToStep3 : goToStep2)}
+        disabled={loading}
+        style={{ padding: "8px 18px", borderRadius: 20, background: "#7C3AED", color: "white", border: "none", cursor: "pointer", fontSize: 14, fontWeight: 700, opacity: loading ? 0.7 : 1 }}
+      >
+        {step === 3 ? (loading ? "Saving..." : "Save") : "Next"}
+      </button>
     </div>
   );
 
   const MerchantHeader = () => (
-    <div className="card card-md" style={{ margin: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div style={{ background: "#EDE9FE", margin: "16px", borderRadius: 16, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
       <div>
-        <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: "#7C3AED", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
           Paid for {description || "Expense"}
         </p>
-        <p style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', margin: 0 }}>₹{(parseFloat(amount) || 0).toFixed(2)}</p>
+        <p style={{ fontSize: 24, fontWeight: 900, color: "#1a0533", margin: 0 }}>₹{(parseFloat(amount) || 0).toFixed(2)}</p>
       </div>
-      <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Receipt style={{ width: 24, height: 24, color: '#4f46e5' }} />
+      <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#7C3AED", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Receipt style={{ width: 22, height: 22, color: "white" }} />
       </div>
     </div>
   );
 
   const StepIndicator = () => (
-    <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '12px 0' }}>
+    <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "10px 0" }}>
       {[1, 2, 3].map(s => (
         <div key={s} style={{
-          width: step === s ? 24 : 8,
-          height: 8,
-          borderRadius: 4,
-          background: step === s ? '#4f46e5' : step > s ? '#a5b4fc' : '#e2e8f0',
-          transition: 'all 0.2s ease',
+          width: step === s ? 24 : 8, height: 8, borderRadius: 4,
+          background: step === s ? "#7C3AED" : step > s ? "#C4B5FD" : "#E9D5FF",
+          transition: "all 0.2s ease",
         }} />
       ))}
     </div>
   );
 
   return (
-    <div className="app-page" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: "#F8F5FF", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
 
       {/* ═══════════════ STEP 1: DETAILS ═══════════════ */}
       {step === 1 && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingBottom: 96 }}>
-          <TopBar title="New Expense" showBackToGroups={true} />
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: 96 }}>
+          <TopBar title="Add Expense" showBackToGroups={true} />
           <StepIndicator />
 
           {error && (
@@ -333,10 +338,10 @@ export default function NewExpenseWizard() {
                       onClick={() => setCategory(cat.id)}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
-                        borderRadius: 20, border: `2px solid ${category === cat.id ? '#4f46e5' : '#e2e8f0'}`,
-                        background: category === cat.id ? '#eef2ff' : 'white',
+                        borderRadius: 20, border: `2px solid ${category === cat.id ? '#7C3AED' : '#e2e8f0'}`,
+                        background: category === cat.id ? '#EDE9FE' : 'white',
                         cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                        color: category === cat.id ? '#4338ca' : '#64748b',
+                        color: category === cat.id ? '#7C3AED' : '#64748b',
                         transition: 'all 0.15s ease',
                       }}
                     >
@@ -406,7 +411,7 @@ export default function NewExpenseWizard() {
                     />
                     {uploadingReceipt && (
                       <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ fontSize: 13, color: '#4f46e5', fontWeight: 600 }}>Uploading...</div>
+                        <div style={{ fontSize: 13, color: '#7C3AED', fontWeight: 600 }}>Uploading...</div>
                       </div>
                     )}
                     {!uploadingReceipt && receiptUrl && (
@@ -467,7 +472,7 @@ export default function NewExpenseWizard() {
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 onClick={() => setSelectedMemberIds(members.map(m => m.id))}
-                style={{ fontSize: 12, fontWeight: 700, color: '#4f46e5', background: '#eef2ff', border: 'none', borderRadius: 20, padding: '4px 12px', cursor: 'pointer' }}
+                style={{ fontSize: 12, fontWeight: 700, color: '#7C3AED', background: '#EDE9FE', border: 'none', borderRadius: 20, padding: '4px 12px', cursor: 'pointer' }}
               >
                 All
               </button>
@@ -527,7 +532,7 @@ export default function NewExpenseWizard() {
                       {member.name}
                     </p>
                     {member.id === paidById && (
-                      <p style={{ margin: '2px 0 0', fontSize: 11, fontWeight: 600, color: '#4f46e5' }}>Paid by this person</p>
+                      <p style={{ margin: '2px 0 0', fontSize: 11, fontWeight: 600, color: '#7C3AED' }}>Paid by this person</p>
                     )}
                   </div>
 
@@ -580,7 +585,7 @@ export default function NewExpenseWizard() {
                 setShowAdvancedSplit(v => !v);
                 if (showAdvancedSplit) setSplitMode('amount');
               }}
-              style={{ fontSize: 12, fontWeight: 700, color: showAdvancedSplit ? '#be123c' : '#4f46e5', background: showAdvancedSplit ? '#fee2e2' : '#eef2ff', border: 'none', borderRadius: 20, padding: '4px 12px', cursor: 'pointer' }}
+              style={{ fontSize: 12, fontWeight: 700, color: showAdvancedSplit ? '#be123c' : '#7C3AED', background: showAdvancedSplit ? '#fee2e2' : '#EDE9FE', border: 'none', borderRadius: 20, padding: '4px 12px', cursor: 'pointer' }}
             >
               {showAdvancedSplit ? '✕ Simple split' : '⚙️ Custom split'}
             </button>
@@ -591,11 +596,11 @@ export default function NewExpenseWizard() {
               <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 12, padding: 4, gap: 4 }}>
                 <button
                   onClick={() => setSplitMode('amount')}
-                  style={{ padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: splitMode === 'amount' ? '#4f46e5' : 'transparent', color: splitMode === 'amount' ? 'white' : '#64748b', transition: 'all 0.2s' }}
+                  style={{ padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: splitMode === 'amount' ? '#7C3AED' : 'transparent', color: splitMode === 'amount' ? 'white' : '#64748b', transition: 'all 0.2s' }}
                 >₹ Amount</button>
                 <button
                   onClick={() => setSplitMode('percent')}
-                  style={{ padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: splitMode === 'percent' ? '#4f46e5' : 'transparent', color: splitMode === 'percent' ? 'white' : '#64748b', transition: 'all 0.2s' }}
+                  style={{ padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: splitMode === 'percent' ? '#7C3AED' : 'transparent', color: splitMode === 'percent' ? 'white' : '#64748b', transition: 'all 0.2s' }}
                 >% Split</button>
               </div>
             </div>
@@ -622,23 +627,23 @@ export default function NewExpenseWizard() {
                         </div>
                       </div>
                       <div style={{ position: 'relative', width: 6, background: '#e0e7ff', borderRadius: 3, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', margin: '0 auto 12px' }}>
-                        <div style={{ width: '100%', background: '#4f46e5', borderRadius: 3, height: `${pct}%`, transition: 'height 0.3s ease' }} />
-                        <div style={{ position: 'absolute', width: 20, height: 20, background: 'white', border: '2px solid #4f46e5', borderRadius: '50%', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', bottom: `calc(${pct}% - 10px)`, left: -7, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                          <div style={{ width: 5, height: 2, background: '#c7d2fe', borderRadius: 1 }} />
+                        <div style={{ width: '100%', background: '#7C3AED', borderRadius: 3, height: `${pct}%`, transition: 'height 0.3s ease' }} />
+                        <div style={{ position: 'absolute', width: 20, height: 20, background: 'white', border: '2px solid #7C3AED', borderRadius: '50%', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', bottom: `calc(${pct}% - 10px)`, left: -7, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                          <div style={{ width: 5, height: 2, background: '#C4B5FD', borderRadius: 1 }} />
                         </div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                         <input
                           type="number"
-                          style={{ width: '100%', textAlign: 'center', fontSize: 12, fontWeight: 700, background: 'transparent', border: 'none', borderBottom: '2px solid #c7d2fe', outline: 'none', padding: '4px 2px', color: '#1e293b' }}
+                          style={{ width: '100%', textAlign: 'center', fontSize: 12, fontWeight: 700, background: 'transparent', border: 'none', borderBottom: '2px solid #C4B5FD', outline: 'none', padding: '4px 2px', color: '#1e293b' }}
                           value={currentSplit === 0 ? "" : currentSplit}
                           onChange={(e) => {
                             const val = parseFloat(e.target.value) || 0;
                             setSplits(prev => ({ ...prev, [id]: val }));
                           }}
                           step="0.01"
-                          onFocus={e => (e.target as HTMLInputElement).style.borderBottomColor = '#4f46e5'}
-                          onBlur={e => (e.target as HTMLInputElement).style.borderBottomColor = '#c7d2fe'}
+                          onFocus={e => (e.target as HTMLInputElement).style.borderBottomColor = '#7C3AED'}
+                          onBlur={e => (e.target as HTMLInputElement).style.borderBottomColor = '#C4B5FD'}
                         />
                         <p style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', marginTop: 4 }}>₹</p>
                       </div>
@@ -673,7 +678,7 @@ export default function NewExpenseWizard() {
                             const val = parseInt(e.target.value);
                             setPercentages(prev => ({ ...prev, [id]: val }));
                           }}
-                          style={{ width: '100%', accentColor: '#4f46e5' }}
+                          style={{ width: '100%', accentColor: '#7C3AED' }}
                         />
                       </div>
                       <div style={{ textAlign: 'right', minWidth: 64 }}>
@@ -687,9 +692,9 @@ export default function NewExpenseWizard() {
                               const val = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
                               setPercentages(prev => ({ ...prev, [id]: val }));
                             }}
-                            style={{ width: 44, textAlign: 'center', fontSize: 15, fontWeight: 900, color: '#4f46e5', border: 'none', borderBottom: '2px solid #c7d2fe', background: 'transparent', outline: 'none', padding: '2px 0' }}
+                            style={{ width: 44, textAlign: 'center', fontSize: 15, fontWeight: 900, color: '#7C3AED', border: 'none', borderBottom: '2px solid #C4B5FD', background: 'transparent', outline: 'none', padding: '2px 0' }}
                           />
-                          <span style={{ fontSize: 15, fontWeight: 700, color: '#4f46e5' }}>%</span>
+                          <span style={{ fontSize: 15, fontWeight: 700, color: '#7C3AED' }}>%</span>
                         </div>
                         <p style={{ fontSize: 11, color: '#64748b', margin: '2px 0 0', fontWeight: 600 }}>₹{derived.toFixed(0)}</p>
                       </div>
@@ -700,7 +705,7 @@ export default function NewExpenseWizard() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: 12, background: (() => { const t = Object.values(percentages).reduce((s,v)=>s+v,0); return t === 100 ? '#f0fdf4' : '#fff7ed'; })(), border: `1.5px solid ${(() => { const t = Object.values(percentages).reduce((s,v)=>s+v,0); return t === 100 ? '#bbf7d0' : '#fed7aa'; })()}` }}>
                   <span style={{ fontSize: 14, fontWeight: 700, color: '#475569' }}>Total: {Object.values(percentages).reduce((s,v)=>s+v,0)}%</span>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => { applyPercentages(); }} style={{ fontSize: 12, fontWeight: 700, color: '#4f46e5', background: '#eef2ff', padding: '4px 10px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
+                    <button onClick={() => { applyPercentages(); }} style={{ fontSize: 12, fontWeight: 700, color: '#7C3AED', background: '#EDE9FE', padding: '4px 10px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
                       Apply
                     </button>
                     <button onClick={() => { distributeEqual(); }} style={{ fontSize: 12, fontWeight: 700, color: '#64748b', background: '#f1f5f9', padding: '4px 10px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
@@ -717,7 +722,7 @@ export default function NewExpenseWizard() {
                 <p style={{ color: '#64748b', margin: 0 }}>
                   Total: <span style={{ fontWeight: 900, color: '#0f172a' }}>₹{splitTotal.toFixed(2)}</span> / ₹{parseFloat(amount).toFixed(2)}
                 </p>
-                <button onClick={distributeEqual} style={{ color: '#4f46e5', fontWeight: 700, background: '#eef2ff', padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13 }}>
+                <button onClick={distributeEqual} style={{ color: '#7C3AED', fontWeight: 700, background: '#EDE9FE', padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13 }}>
                   Equal Split
                 </button>
               </div>

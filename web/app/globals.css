@@ -11,7 +11,7 @@ html {
 }
 
 body {
-  background: linear-gradient(135deg, #f8fafc 0%, rgba(79, 70, 229, 0.06) 50%, rgba(124, 58, 237, 0.04) 100%);
+  background: #F8F5FF;
   color: #0f172a;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -39,12 +39,12 @@ h3 {
 
 @layer base {
   a {
-    color: #4f46e5;
+    color: #7C3AED;
     text-decoration: none;
     transition: color 0.2s ease;
   }
   a:hover {
-    color: #4338ca;
+    color: #6D28D9;
   }
 }
 
@@ -54,10 +54,7 @@ h3 {
 
 .app-page {
   min-height: 100vh;
-  background:
-    radial-gradient(600px 400px at 5% 15%, rgba(79, 70, 229, 0.08), transparent 50%),
-    radial-gradient(500px 400px at 95% 5%, rgba(124, 58, 237, 0.06), transparent 50%),
-    #f8fafc;
+  background: #F8F5FF;
 }
 
 .app-shell {
@@ -197,31 +194,31 @@ h3 {
     min-height: 2.75rem;
     padding: 0.75rem 1.75rem;
     border-radius: 0.875rem;
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
     border: none;
     color: white;
     font-weight: 700;
     font-size: 0.95rem;
     cursor: pointer;
     box-shadow:
-      0 2px 4px rgba(79, 70, 229, 0.2),
-      0 6px 20px rgba(79, 70, 229, 0.3);
+      0 2px 4px rgba(124, 58, 237, 0.2),
+      0 6px 20px rgba(124, 58, 237, 0.3);
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
     overflow: hidden;
   }
 
   .btn-primary:hover {
-    background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+    background: linear-gradient(135deg, #6D28D9 0%, #4C1D95 100%);
     box-shadow:
-      0 4px 8px rgba(79, 70, 229, 0.25),
-      0 12px 32px rgba(79, 70, 229, 0.4);
+      0 4px 8px rgba(124, 58, 237, 0.25),
+      0 12px 32px rgba(124, 58, 237, 0.4);
     transform: translateY(-2px);
   }
 
   .btn-primary:active {
     transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+    box-shadow: 0 2px 4px rgba(124, 58, 237, 0.2);
   }
 
   .btn-secondary {
