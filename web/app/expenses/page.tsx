@@ -8,6 +8,7 @@ import {
   Wallet, Plus, User, Receipt, TrendingUp, TrendingDown,
   ChevronRight, Search, X, SlidersHorizontal,
 } from "lucide-react";
+import { AppShell } from "@/app/components/AppSidebar";
 
 const CATEGORY_EMOJIS: Record<string, string> = {
   food: "🍽️", transport: "🚗", housing: "🏠", entertainment: "🎉",
@@ -147,9 +148,19 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="app-page pb-24">
+    <AppShell activeTab="expenses">
+    <div className="app-page" style={{ minHeight: "100vh", background: "#F8F5FF" }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } } @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
-      <div className="app-shell animate-fadeIn">
+
+      {/* Desktop top bar */}
+      <div className="hidden lg:flex" style={{ alignItems: "center", justifyContent: "space-between", padding: "20px 32px 0", marginBottom: 8 }}>
+        <div>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: "#0f172a", margin: 0 }}>Expenses</h1>
+          <p style={{ fontSize: 13, color: "#64748b", margin: "2px 0 0" }}>All your expenses across every group</p>
+        </div>
+      </div>
+
+      <div className="app-shell animate-fadeIn lg:px-8 lg:py-4">
 
         {/* Hero banner */}
         <div className="summary-card" style={{ marginBottom: 24, marginTop: 16 }}>
@@ -433,28 +444,7 @@ export default function ExpensesPage() {
         )}
 
       </div>
-
-      {/* Bottom Nav */}
-      <nav className="nav-bottom">
-        <div className="max-w-[80rem] mx-auto flex items-center justify-around px-4">
-          <Link href="/" className="nav-bottom-item">
-            <Wallet size={22} className="mb-1" />
-            Home
-          </Link>
-          <Link href="/expenses" className="nav-bottom-item nav-bottom-active">
-            <Receipt size={22} className="mb-1" />
-            Expenses
-          </Link>
-          <Link href="/groups/new" className="nav-bottom-item">
-            <Plus size={22} className="mb-1" />
-            New Group
-          </Link>
-          <Link href="/profile" className="nav-bottom-item">
-            <User size={22} className="mb-1" />
-            Profile
-          </Link>
-        </div>
-      </nav>
     </div>
+    </AppShell>
   );
 }

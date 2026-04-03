@@ -89,6 +89,11 @@ export const activityApi = {
   getByGroup: (groupId: number) => api.get(`/groups/${groupId}/activity`),
 };
 
+// Personal Expenses (all expenses the user paid or is split into, across all groups)
+export const personalExpenses = {
+  getAll: () => api.get("/expenses"),
+};
+
 // Export
 export const exportApi = {
   getCSV: (groupId: number) =>

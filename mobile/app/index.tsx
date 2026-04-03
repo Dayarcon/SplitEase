@@ -277,10 +277,11 @@ export default function HomeScreen() {
       {/* ── BOTTOM TAB BAR ── */}
       <View style={[styles.tabBar, { paddingBottom: insets.bottom + 4 }]}>
         {[
-          { label: "Groups", emoji: "👥", active: true, onPress: undefined },
-          { label: "Friends", emoji: "🤝", active: false, onPress: () => router.push("/friends") },
-          { label: "Activity", emoji: "🔔", active: false, onPress: () => router.push("/activity") },
-          { label: "Account", emoji: "👤", active: false, onPress: () => router.push("/profile") },
+          { label: "GROUPS", emoji: "👥", active: true, onPress: undefined },
+          { label: "EXPENSES", emoji: "🧾", active: false, onPress: () => router.push("/expenses") },
+          { label: "FRIENDS", emoji: "🤝", active: false, onPress: () => router.push("/friends") },
+          { label: "ACTIVITY", emoji: "🔔", active: false, onPress: () => router.push("/activity") },
+          { label: "ACCOUNT", emoji: "👤", active: false, onPress: () => router.push("/profile") },
         ].map(tab => (
           <TouchableOpacity
             key={tab.label}
@@ -288,7 +289,7 @@ export default function HomeScreen() {
             onPress={tab.onPress}
             activeOpacity={0.7}
           >
-            <Text style={{ fontSize: 20, marginBottom: 2 }}>{tab.emoji}</Text>
+            <Text style={{ fontSize: 18, marginBottom: 1 }}>{tab.emoji}</Text>
             <Text style={[styles.tabLabel, { color: tab.active ? PURPLE : "#94a3b8", fontWeight: tab.active ? "700" : "500" }]}>
               {tab.label}
             </Text>
@@ -412,7 +413,7 @@ const styles = StyleSheet.create({
     flex: 1, alignItems: "center", justifyContent: "center",
     paddingVertical: 4, position: "relative",
   },
-  tabLabel: { fontSize: 10, letterSpacing: 0.3, textTransform: "uppercase", marginTop: 1 },
+  tabLabel: { fontSize: 9, letterSpacing: 0.2, textTransform: "uppercase", marginTop: 1 },
   tabActiveIndicator: {
     position: "absolute", top: 0, left: "25%", right: "25%",
     height: 2, backgroundColor: PURPLE, borderBottomLeftRadius: 2, borderBottomRightRadius: 2,

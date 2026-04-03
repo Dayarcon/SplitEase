@@ -12,6 +12,7 @@ import {
   TrendingUp, TrendingDown, Check, UserPlus, Mail,
   Settings, Download, Bell, Copy
 } from "lucide-react";
+import { AppShell } from "@/app/components/AppSidebar";
 
 interface Member {
   userId: number;
@@ -407,8 +408,9 @@ export default function GroupDetail() {
     group.members.find(m => m.user.id === userId)?.user.name || "Unknown";
 
   return (
-    <div style={{ background: "#F8F5FF", minHeight: "100vh", paddingBottom: 96 }}>
-      <div style={{ maxWidth: 520, margin: "0 auto", padding: "0 16px" }}>
+    <AppShell activeTab="groups">
+    <div style={{ background: "#F8F5FF", minHeight: "100vh" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 16px" }} className="lg:max-w-3xl">
 
         {/* ── HEADER ── */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 0 16px" }}>
@@ -1428,39 +1430,7 @@ export default function GroupDetail() {
 
       </div>
 
-      {/* ── BOTTOM NAV ── */}
-      <nav style={{
-        position: "fixed", bottom: 0, left: 0, right: 0,
-        background: "white", borderTop: "1px solid #F3F0FF",
-        height: 68, display: "flex", alignItems: "center", justifyContent: "center",
-        zIndex: 50, boxShadow: "0 -4px 20px rgba(124,58,237,0.08)",
-      }}>
-        <div style={{ display: "flex", alignItems: "stretch", justifyContent: "space-around", width: "100%", maxWidth: 520, height: "100%" }}>
-          {[
-            { href: "/", icon: <Users size={22} />, label: "Groups", active: false },
-            { href: "/expenses", icon: <Wallet size={22} />, label: "Friends", active: false },
-            { href: "/expenses", icon: <Activity size={22} />, label: "Activity", active: false },
-            { href: "/profile", icon: <User size={22} />, label: "Account", active: false },
-          ].map(item => (
-            <Link
-              key={item.label}
-              href={item.href}
-              style={{
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                gap: 3, flex: 1, textDecoration: "none", padding: "8px 0",
-                color: "#94a3b8",
-                borderTop: "2px solid transparent",
-                transition: "color 0.2s",
-              }}
-            >
-              {item.icon}
-              <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                {item.label}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </nav>
     </div>
+    </AppShell>
   );
 }
