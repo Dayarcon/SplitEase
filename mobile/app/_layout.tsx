@@ -4,12 +4,11 @@ import { useEffect } from "react";
 import { useAuth, AuthProvider } from "@/context/auth";
 import { setMobileUserId } from "@/api/client";
 
-const INDIGO = "#4f46e5";
+const PURPLE = "#7C3AED";
 
 function RootLayoutNav() {
   const { user } = useAuth();
 
-  // Keep the API client in sync with auth state
   useEffect(() => {
     setMobileUserId(user ? user.userId : null);
   }, [user]);
@@ -18,33 +17,36 @@ function RootLayoutNav() {
     <>
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: INDIGO },
-          headerTintColor: "#fff",
-          headerTitleStyle: { fontWeight: "bold" },
-          contentStyle: { backgroundColor: "#f1f0ff" },
+          headerStyle: { backgroundColor: "#F8F5FF" },
+          headerTintColor: PURPLE,
+          headerTitleStyle: { fontWeight: "bold", color: "#0f172a" },
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: "#F8F5FF" },
         }}
       >
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen
           name="index"
-          options={{ title: "SplitEase", headerRight: undefined }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="new-group"
           options={{ title: "New Group", presentation: "modal" }}
         />
-        <Stack.Screen name="profile" options={{ title: "My Profile" }} />
-        <Stack.Screen name="[id]/index" options={{ title: "Group" }} />
+        <Stack.Screen name="profile" options={{ headerShown: false }} />
+        <Stack.Screen name="activity" options={{ headerShown: false }} />
+        <Stack.Screen name="friends" options={{ headerShown: false }} />
+        <Stack.Screen name="[id]/index" options={{ headerShown: false }} />
         <Stack.Screen
           name="[id]/add-expense"
-          options={{ title: "Add Expense", presentation: "modal" }}
+          options={{ headerShown: false, presentation: "modal" }}
         />
         <Stack.Screen
           name="[id]/edit-expense"
           options={{ title: "Edit Expense", presentation: "modal" }}
         />
       </Stack>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
     </>
   );
 }
