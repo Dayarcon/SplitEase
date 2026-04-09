@@ -30,6 +30,12 @@ interface Group {
     splits: { userId: number; amount: number }[];
     createdAt?: string;
   }[];
+  settlements?: {
+    id: number;
+    fromUserId: number;
+    toUserId: number;
+    amount: number;
+  }[];
 }
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
@@ -53,6 +59,14 @@ function getBalance(group: Group, currentUserId: number) {
     const split = exp.splits.find((s) => s.userId === currentUserId);
     if (split) owes += split.amount;
   });
+
+  // Apply settlements: if I paid someone, reduce what I owe; if someone paid me, reduce what I'm owed
+  const settlements = group.settlements || [];
+  settlements.forEach((s) => {
+    if (s.fromUserId === currentUserId) paid += s.amount;   // I settled — counts as me paying
+    if (s.toUserId === currentUserId) owes += s.amount;     // someone paid me — reduces my net owed
+  });
+
   return paid - owes;
 }
 

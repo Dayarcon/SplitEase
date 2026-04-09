@@ -18,6 +18,7 @@ interface Group {
   currency?: string;
   members: { userId: number; user: { id: number; name: string } }[];
   expenses: { amount: number; paidById: number; splits: { userId: number; amount: number }[] }[];
+  settlements?: { fromUserId: number; toUserId: number; amount: number }[];
 }
 
 export default function GroupsPage() {
@@ -50,6 +51,11 @@ export default function GroupsPage() {
       if (exp.paidById === currentUserId) paid += exp.amount;
       const split = exp.splits.find(s => s.userId === currentUserId);
       if (split) owes += split.amount;
+    });
+    // Apply settlements so paid debts are reflected here too
+    (group.settlements || []).forEach(s => {
+      if (s.fromUserId === currentUserId) paid += s.amount;
+      if (s.toUserId === currentUserId) owes += s.amount;
     });
     return paid - owes;
   }

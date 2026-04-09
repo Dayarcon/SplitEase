@@ -55,12 +55,24 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Summary stats
+    // Summary stats from expenses
     const totalPaidByMe = annotated
       .filter((e) => e.iPaid)
       .reduce((s, e) => s + e.amount, 0);
     const totalMyShare = annotated.reduce((s, e) => s + e.myShare, 0);
-    const netBalance = annotated.reduce((s, e) => s + e.net, 0);
+    const rawNetBalance = annotated.reduce((s, e) => s + e.net, 0);
+
+    // Adjust netBalance for settlements: money I've paid out reduces what I owe,
+    // money received reduces what others owe me
+    const settlements = await prisma.settlement.findMany({
+      where: { OR: [{ fromUserId: userId }, { toUserId: userId }] },
+    });
+    const settlementAdjustment = settlements.reduce((s, settlement) => {
+      if (settlement.fromUserId === userId) return s + settlement.amount; // I paid — reduces my debt
+      if (settlement.toUserId === userId) return s - settlement.amount;  // paid to me — reduces credit
+      return s;
+    }, 0);
+    const netBalance = rawNetBalance + settlementAdjustment;
 
     return NextResponse.json({
       expenses: annotated,

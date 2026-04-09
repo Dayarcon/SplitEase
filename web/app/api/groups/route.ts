@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
           },
           orderBy: { createdAt: "desc" },
         },
+        settlements: true,
       },
       orderBy: { createdAt: "desc" },
     });

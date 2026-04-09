@@ -107,6 +107,7 @@ export default function GroupDetail() {
   const [sendingRemindId, setSendingRemindId] = useState<number | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [copiedUpi, setCopiedUpi] = useState<string | null>(null);
+  const [deletingSettlementId, setDeletingSettlementId] = useState<number | null>(null);
   const [showAddMember, setShowAddMember] = useState(false);
   const [addMemberEmail, setAddMemberEmail] = useState("");
   const [addMemberName, setAddMemberName] = useState("");
@@ -375,6 +376,27 @@ export default function GroupDetail() {
     }
   };
 
+  const handleDeleteSettlement = async (settlementId: number) => {
+    setDeletingSettlementId(settlementId);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/settle/${settlementId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        console.error("Failed to delete settlement:", data.error);
+        return;
+      }
+      const balancesRes = await fetch(`/api/groups/${groupId}/balances`);
+      const balancesData = await balancesRes.json();
+      setBalances(balancesData.balances || {});
+      setTransactions(balancesData.transactions || []);
+      setSettlements(balancesData.settlements || []);
+    } catch (error) {
+      console.error("Error deleting settlement:", error);
+    } finally {
+      setDeletingSettlementId(null);
+    }
+  };
+
   const PURPLE     = "#7C3AED";
   const PURPLE_MID = "#6D28D9";
   const PAGE_BG    = "#F0EEFF";
@@ -525,9 +547,12 @@ export default function GroupDetail() {
 
           {/* Settle Up & Add Expense buttons */}
           <div style={{ display: "flex", gap: 10 }}>
-            {transactions.length > 0 && (
+            {transactions.some(t => t.fromUserId === currentUserId || t.toUserId === currentUserId) && (
               <button
-                onClick={() => { if (transactions.length > 0) { setSettleTransaction(transactions[0]); setShowSettleModal(true); } }}
+                onClick={() => {
+                  const myTxn = transactions.find(t => t.fromUserId === currentUserId || t.toUserId === currentUserId);
+                  if (myTxn) { setSettleTransaction(myTxn); setShowSettleModal(true); }
+                }}
                 style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "rgba(255,255,255,0.2)", color: "white", fontWeight: 700, fontSize: 14, padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.25)", cursor: "pointer", backdropFilter: "blur(8px)" }}
               >
                 <CheckCircle2 size={16} />
@@ -756,42 +781,51 @@ export default function GroupDetail() {
                           );
                         })()}
                         {t.toUserId === currentUserId && (
-                          <button
-                            onClick={async () => {
-                              const name = getMemberName(t.fromUserId);
-                              setSendingRemindId(t.fromUserId);
-                              try {
-                                const res = await fetch(`/api/groups/${groupId}/remind`, {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({
-                                    fromUserId: t.fromUserId,
-                                    toUserId: t.toUserId,
-                                    amount: t.amount,
-                                  }),
-                                });
-                                if (res.ok) {
-                                  setRemindToast(`📧 Reminder email sent to ${name}!`);
-                                } else {
-                                  setRemindToast(`⚠️ Could not send reminder to ${name}`);
+                          <>
+                            <button
+                              onClick={() => { setSettleTransaction(t); setShowSettleModal(true); }}
+                              style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 14px", background: `linear-gradient(135deg, #7C3AED, #6D28D9)`, color: "white", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(124,58,237,0.3)" }}
+                            >
+                              <Check style={{ width: 16, height: 16 }} />
+                              Mark as Settled
+                            </button>
+                            <button
+                              onClick={async () => {
+                                const name = getMemberName(t.fromUserId);
+                                setSendingRemindId(t.fromUserId);
+                                try {
+                                  const res = await fetch(`/api/groups/${groupId}/remind`, {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      fromUserId: t.fromUserId,
+                                      toUserId: t.toUserId,
+                                      amount: t.amount,
+                                    }),
+                                  });
+                                  if (res.ok) {
+                                    setRemindToast(`📧 Reminder email sent to ${name}!`);
+                                  } else {
+                                    setRemindToast(`⚠️ Could not send reminder to ${name}`);
+                                  }
+                                } catch {
+                                  setRemindToast(`⚠️ Network error. Try again.`);
+                                } finally {
+                                  setSendingRemindId(null);
+                                  setTimeout(() => setRemindToast(""), 4000);
                                 }
-                              } catch {
-                                setRemindToast(`⚠️ Network error. Try again.`);
-                              } finally {
-                                setSendingRemindId(null);
-                                setTimeout(() => setRemindToast(""), 4000);
-                              }
-                            }}
-                            disabled={sendingRemindId === t.fromUserId}
-                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 14px", background: "white", color: "#64748b", border: "1.5px solid #E2E8F0", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer" }}
-                          >
-                            {sendingRemindId === t.fromUserId ? (
-                              <div style={{ width: 14, height: 14, border: "2px solid #cbd5e1", borderTopColor: "#7C3AED", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-                            ) : (
-                              <Bell style={{ width: 16, height: 16 }} />
-                            )}
-                            {sendingRemindId === t.fromUserId ? 'Sending…' : 'Remind'}
-                          </button>
+                              }}
+                              disabled={sendingRemindId === t.fromUserId}
+                              style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 14px", background: "white", color: "#64748b", border: "1.5px solid #E2E8F0", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+                            >
+                              {sendingRemindId === t.fromUserId ? (
+                                <div style={{ width: 14, height: 14, border: "2px solid #cbd5e1", borderTopColor: "#7C3AED", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                              ) : (
+                                <Bell style={{ width: 16, height: 16 }} />
+                              )}
+                              {sendingRemindId === t.fromUserId ? 'Sending…' : 'Remind'}
+                            </button>
+                          </>
                         )}
                       </div>
                     )}
@@ -818,9 +852,21 @@ export default function GroupDetail() {
                         <strong>{getMemberName(s.toUserId)}</strong>
                       </span>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={{ fontWeight: 900, color: '#16a34a', margin: 0 }}>{sym}{s.amount.toFixed(0)}</p>
-                      <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{new Date(s.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ textAlign: 'right' }}>
+                        <p style={{ fontWeight: 900, color: '#16a34a', margin: 0 }}>{sym}{s.amount.toFixed(0)}</p>
+                        <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>{new Date(s.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
+                      </div>
+                      {currentUserId && (s.fromUserId === currentUserId || s.toUserId === currentUserId) && (
+                        <button
+                          onClick={() => handleDeleteSettlement(s.id)}
+                          disabled={deletingSettlementId === s.id}
+                          title="Remove this settlement"
+                          style={{ background: 'none', border: 'none', cursor: deletingSettlementId === s.id ? 'not-allowed' : 'pointer', padding: 4, color: '#f87171', opacity: deletingSettlementId === s.id ? 0.5 : 1, display: 'flex', alignItems: 'center' }}
+                        >
+                          <X style={{ width: 15, height: 15 }} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
