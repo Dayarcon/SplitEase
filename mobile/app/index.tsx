@@ -26,6 +26,7 @@ interface Group {
   emoji?: string;
   members: Array<{ userId: number; user: { id: number; name: string } }>;
   expenses: Array<{ amount: number; paidById: number; splits: { userId: number; amount: number }[] }>;
+  settlements?: Array<{ fromUserId: number; toUserId: number; amount: number }>;
 }
 
 // ── AVATAR STACK ──────────────────────────────────────────────────────────────
@@ -71,11 +72,16 @@ function GroupCard({
 }: { item: Group; onPress: () => void; currentUserId: number }) {
   const sym = CURRENCY_SYMBOLS[item.currency || "INR"] || "₹";
   const expenses = item.expenses || [];
-  const totalPaid = expenses.reduce((s, e) => s + (e.paidById === currentUserId ? e.amount : 0), 0);
-  const totalOwes = expenses.reduce((s, e) => {
+  let totalPaid = expenses.reduce((s, e) => s + (e.paidById === currentUserId ? e.amount : 0), 0);
+  let totalOwes = expenses.reduce((s, e) => {
     const split = e.splits?.find(sp => sp.userId === currentUserId);
     return s + (split ? split.amount : 0);
   }, 0);
+  // Apply settlements so balance reflects what has actually been paid
+  (item.settlements || []).forEach(s => {
+    if (s.fromUserId === currentUserId) totalPaid += s.amount;
+    if (s.toUserId === currentUserId) totalOwes += s.amount;
+  });
   const balance = totalPaid - totalOwes;
   const isOwed = balance > 0;
   const isOwes = balance < 0;
@@ -137,19 +143,26 @@ export default function HomeScreen() {
 
   useFocusEffect(useCallback(() => { fetchGroups(); }, [fetchGroups]));
 
-  // Compute totals
-  const youOwe = groupsList.reduce((sum, g) => {
+  // Compute totals — include settlements so paid debts don't keep showing
+  const getGroupBalance = (g: Group) => {
     const expenses = g.expenses || [];
-    const paid = expenses.reduce((s, e) => s + (e.paidById === currentUserId ? e.amount : 0), 0);
-    const owes = expenses.reduce((s, e) => { const sp = e.splits?.find(x => x.userId === currentUserId); return s + (sp ? sp.amount : 0); }, 0);
-    return sum + Math.max(0, owes - paid);
+    let paid = expenses.reduce((s, e) => s + (e.paidById === currentUserId ? e.amount : 0), 0);
+    let owes = expenses.reduce((s, e) => { const sp = e.splits?.find(x => x.userId === currentUserId); return s + (sp ? sp.amount : 0); }, 0);
+    (g.settlements || []).forEach(s => {
+      if (s.fromUserId === currentUserId) paid += s.amount;
+      if (s.toUserId === currentUserId) owes += s.amount;
+    });
+    return paid - owes;
+  };
+
+  const youOwe = groupsList.reduce((sum, g) => {
+    const bal = getGroupBalance(g);
+    return sum + Math.max(0, -bal);
   }, 0);
 
   const owedToYou = groupsList.reduce((sum, g) => {
-    const expenses = g.expenses || [];
-    const paid = expenses.reduce((s, e) => s + (e.paidById === currentUserId ? e.amount : 0), 0);
-    const owes = expenses.reduce((s, e) => { const sp = e.splits?.find(x => x.userId === currentUserId); return s + (sp ? sp.amount : 0); }, 0);
-    return sum + Math.max(0, paid - owes);
+    const bal = getGroupBalance(g);
+    return sum + Math.max(0, bal);
   }, 0);
 
   const totalBalance = owedToYou - youOwe;

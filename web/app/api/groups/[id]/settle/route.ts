@@ -32,8 +32,11 @@ export async function POST(
 
     const { fromUserId, toUserId, amount } = await request.json();
 
-    if (!fromUserId || !toUserId || !amount) {
+    if (!fromUserId || !toUserId || amount === undefined || amount === null) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+    if (Number(amount) <= 0) {
+      return NextResponse.json({ error: "Settlement amount must be greater than zero" }, { status: 400 });
     }
 
     // Verify both parties are in the group
@@ -44,6 +47,14 @@ export async function POST(
 
     if (!fromMember) return NextResponse.json({ error: "Payer not in group" }, { status: 400 });
     if (!toMember) return NextResponse.json({ error: "Recipient not in group" }, { status: 400 });
+
+    // Only the two people involved in this debt can mark it as settled
+    if (userId !== fromUserId && userId !== toUserId) {
+      return NextResponse.json(
+        { error: "You can only settle transactions you are directly involved in" },
+        { status: 403 }
+      );
+    }
 
     const settlement = await prisma.settlement.create({
       data: { groupId, fromUserId, toUserId, amount },

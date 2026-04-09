@@ -56,6 +56,9 @@ interface ActivityItem {
   toName?: string;
   paidByName?: string;
   category?: string | null;
+  settlementId?: number;
+  fromUserId?: number;
+  toUserId?: number;
 }
 
 type TabType = "balances" | "expenses" | "activity";
@@ -71,12 +74,14 @@ export default function GroupDetail() {
 
   const [group, setGroup] = useState<Group | null>(null);
   const [txns, setTxns] = useState<Transaction[]>([]);
+  const [apiBalances, setApiBalances] = useState<{ [key: number]: number }>({});
   const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [settleModal, setSettleModal] = useState<Transaction | null>(null);
   const [settling, setSettling] = useState(false);
   const [toast, setToast] = useState("");
+  const [deletingSettlementId, setDeletingSettlementId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("balances");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
@@ -95,6 +100,7 @@ export default function GroupDetail() {
       ]);
       setGroup(gRes.data);
       setTxns(bRes.data.transactions || []);
+      setApiBalances(bRes.data.balances || {});
     } catch { /* ignore */ } finally {
       setLoading(false);
       setRefreshing(false);
@@ -129,6 +135,24 @@ export default function GroupDetail() {
       fetchData();
     } catch { Alert.alert("Error", "Failed to record settlement"); }
     finally { setSettling(false); }
+  };
+
+  const handleDeleteSettlement = async (settlementId: number) => {
+    Alert.alert("Remove Settlement", "Remove this settlement record?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove", style: "destructive",
+        onPress: async () => {
+          setDeletingSettlementId(settlementId);
+          try {
+            await settlements.delete(groupId, settlementId);
+            showToast("Settlement removed");
+            fetchData();
+          } catch { Alert.alert("Error", "Failed to remove settlement"); }
+          finally { setDeletingSettlementId(null); }
+        },
+      },
+    ]);
   };
 
   const handleDeleteExpense = (expenseId: number, desc: string) => {
@@ -185,16 +209,8 @@ export default function GroupDetail() {
   const getMemberUpiId = (uid: number) =>
     group.members.find((m) => m.userId === uid)?.user.upiId || null;
 
-  const myBalance = (() => {
-    if (!currentUserId) return 0;
-    let net = 0;
-    group.expenses.forEach((e) => {
-      if (e.paidBy.id === currentUserId) net += e.amount;
-      const mySplit = e.splits.find((s) => s.userId === currentUserId);
-      if (mySplit) net -= mySplit.amount;
-    });
-    return net;
-  })();
+  // Use the settlement-aware balance from the API instead of recalculating from expenses
+  const myBalance = currentUserId ? (apiBalances[currentUserId] || 0) : 0;
 
   const filteredExpenses = group.expenses.filter((e) => {
     const q = search.toLowerCase();
@@ -282,11 +298,18 @@ export default function GroupDetail() {
                   </>
                 )}
                 {currentUserId === t.toUserId && (
-                  <TouchableOpacity
-                    style={[styles.payBtn, { paddingVertical: r.s(10), borderRadius: r.s(10), backgroundColor: "#f0fdf4", borderColor: "#bbf7d0" }]}
-                    onPress={() => showToast(`Reminder sent to ${getMemberName(t.fromUserId)}! 🔔`)}>
-                    <Text style={[styles.payBtnText, { fontSize: r.fs(14), color: GREEN }]}>🔔 Remind</Text>
-                  </TouchableOpacity>
+                  <>
+                    <TouchableOpacity
+                      style={[styles.payBtn, { paddingVertical: r.s(10), borderRadius: r.s(10) }]}
+                      onPress={() => setSettleModal(t)}>
+                      <Text style={[styles.payBtnText, { fontSize: r.fs(14) }]}>✓ Mark as Settled</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.payBtn, { paddingVertical: r.s(10), borderRadius: r.s(10), backgroundColor: "#f0fdf4", borderColor: "#bbf7d0" }]}
+                      onPress={() => showToast(`Reminder sent to ${getMemberName(t.fromUserId)}! 🔔`)}>
+                      <Text style={[styles.payBtnText, { fontSize: r.fs(14), color: GREEN }]}>🔔 Remind</Text>
+                    </TouchableOpacity>
+                  </>
                 )}
               </View>
             </View>
@@ -295,15 +318,8 @@ export default function GroupDetail() {
       )}
       <Text style={[styles.sectionLabel, { fontSize: r.fs(11) }]}>MEMBER BALANCES</Text>
       {group.members.map((m) => {
-        const bal = (() => {
-          let net = 0;
-          group.expenses.forEach((e) => {
-            if (e.paidBy.id === m.userId) net += e.amount;
-            const split = e.splits.find((s) => s.userId === m.userId);
-            if (split) net -= split.amount;
-          });
-          return net;
-        })();
+        // Use settlement-aware balance from the API
+        const bal = apiBalances[m.userId] || 0;
         const color = bal > 0 ? GREEN : bal < 0 ? RED : "#64748b";
         return (
           <View key={m.userId} style={[styles.memberRow, { borderRadius: r.s(12), padding: r.s(12), marginBottom: r.s(8) }]}>
@@ -437,7 +453,19 @@ export default function GroupDetail() {
                 </>
               ) : (
                 <>
-                  <Text style={[styles.actTitle, { fontSize: r.fs(14) }]}>💸 Settlement</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                    <Text style={[styles.actTitle, { fontSize: r.fs(14) }]}>💸 Settlement</Text>
+                    {currentUserId && item.settlementId &&
+                      (item.fromUserId === currentUserId || item.toUserId === currentUserId) && (
+                        <TouchableOpacity
+                          onPress={() => handleDeleteSettlement(item.settlementId!)}
+                          disabled={deletingSettlementId === item.settlementId}
+                          style={{ padding: 4, opacity: deletingSettlementId === item.settlementId ? 0.4 : 1 }}
+                        >
+                          <Text style={{ fontSize: r.fs(12), color: "#f87171", fontWeight: "700" }}>✕ Remove</Text>
+                        </TouchableOpacity>
+                      )}
+                  </View>
                   <Text style={[styles.actSub, { fontSize: r.fs(13) }]}>{item.fromName} paid {item.toName} · {sym}{item.amount.toFixed(0)}</Text>
                 </>
               )}
@@ -514,10 +542,13 @@ export default function GroupDetail() {
           </View>
           {/* Action buttons */}
           <View style={{ flexDirection: "row", gap: 10 }}>
-            {txns.length > 0 && (
+            {txns.some(t => t.fromUserId === currentUserId || t.toUserId === currentUserId) && (
               <TouchableOpacity
                 style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: PURPLE, paddingVertical: 12, borderRadius: 12 }}
-                onPress={() => setSettleModal(txns[0])}
+                onPress={() => {
+                  const myTxn = txns.find(t => t.fromUserId === currentUserId || t.toUserId === currentUserId);
+                  if (myTxn) setSettleModal(myTxn);
+                }}
               >
                 <Text style={{ color: "white", fontWeight: "700", fontSize: 14 }}>✓ Settle Up</Text>
               </TouchableOpacity>

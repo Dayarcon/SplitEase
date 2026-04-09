@@ -58,6 +58,9 @@ export async function GET(
       })),
       ...settlements.map((s) => ({
         id: `settlement-${s.id}`,
+        settlementId: s.id,
+        fromUserId: s.fromUser.id,
+        toUserId: s.toUser.id,
         type: "settlement" as const,
         title: `${s.fromUser.name} paid ${s.toUser.name}`,
         subtitle: "Settlement",

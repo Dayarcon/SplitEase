@@ -82,6 +82,8 @@ export const settlements = {
     groupId: number,
     data: { fromUserId: number; toUserId: number; amount: number }
   ) => api.post(`/groups/${groupId}/settle`, data),
+  delete: (groupId: number, settlementId: number) =>
+    api.delete(`/groups/${groupId}/settle/${settlementId}`),
 };
 
 // Activity
